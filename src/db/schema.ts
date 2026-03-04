@@ -1,4 +1,12 @@
-import { pgTable, serial, text, date, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, date, timestamp, integer, numeric } from "drizzle-orm/pg-core";
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("admin"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 export const certificates = pgTable("certificates", {
   id: serial("id").primaryKey(),
@@ -13,4 +21,30 @@ export const certificates = pgTable("certificates", {
   medicalOfficer: text("medical_officer").notNull(),
   qrCode: text("qr_code"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const physicians = pgTable("physicians", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const medicalOfficers = pgTable("medical_officers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const documentTemplates = pgTable("document_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().default("certificate_template"),
+  fileData: text("file_data").notNull(),
+  pageCount: integer("page_count").notNull().default(1),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
+});
+
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  qrPrice: numeric("qr_price", { precision: 10, scale: 2 }).notNull().default("1.50"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

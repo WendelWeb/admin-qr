@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+interface StaffMember {
+  id: number;
+  name: string;
+}
 
 export default function NewCertificatePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [physicians, setPhysicians] = useState<StaffMember[]>([]);
+  const [officers, setOfficers] = useState<StaffMember[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -16,7 +23,17 @@ export default function NewCertificatePage() {
     medicalOfficer: "",
   });
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/physicians").then((r) => r.json()),
+      fetch("/api/medical-officers").then((r) => r.json()),
+    ]).then(([p, o]) => {
+      setPhysicians(p);
+      setOfficers(o);
+    });
+  }, []);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
@@ -95,28 +112,72 @@ export default function NewCertificatePage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Examining Physician *</label>
-            <input
-              type="text"
-              name="examiningPhysician"
-              value={form.examiningPhysician}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
-              placeholder="Dr. name"
-            />
+            {physicians.length > 0 ? (
+              <select
+                name="examiningPhysician"
+                value={form.examiningPhysician}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+              >
+                <option value="">Select a physician...</option>
+                {physicians.map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div>
+                <input
+                  type="text"
+                  name="examiningPhysician"
+                  value={form.examiningPhysician}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+                  placeholder="Dr. name"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Add physicians in Staff Management to use dropdown
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Medical Officer *</label>
-            <input
-              type="text"
-              name="medicalOfficer"
-              value={form.medicalOfficer}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
-              placeholder="Officer name"
-            />
+            {officers.length > 0 ? (
+              <select
+                name="medicalOfficer"
+                value={form.medicalOfficer}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+              >
+                <option value="">Select an officer...</option>
+                {officers.map((o) => (
+                  <option key={o.id} value={o.name}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div>
+                <input
+                  type="text"
+                  name="medicalOfficer"
+                  value={form.medicalOfficer}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+                  placeholder="Officer name"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Add officers in Staff Management to use dropdown
+                </p>
+              </div>
+            )}
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

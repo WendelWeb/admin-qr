@@ -71,6 +71,16 @@ export default function CertificateDetailPage() {
           &larr; Back
         </button>
         <h1 className="text-2xl font-bold text-gray-800">Certificate #{cert.certificateNumber}</h1>
+        <button
+          onClick={async () => {
+            if (!confirm(`Delete certificate #${cert.certificateNumber} for "${cert.name}"?`)) return;
+            const res = await fetch(`/api/certificates/${cert.id}`, { method: "DELETE" });
+            if (res.ok) router.push("/dashboard");
+          }}
+          className="ml-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+        >
+          Delete
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -97,13 +107,42 @@ export default function CertificateDetailPage() {
                 className="mx-auto mb-4"
                 style={{ width: 200, height: 200 }}
               />
-              <a
-                href={cert.qrCode}
-                download={`qr-${cert.certificateNumber}.png`}
-                className="inline-block px-4 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm"
-              >
-                Download QR
-              </a>
+              <div className="flex flex-col gap-2">
+                <a
+                  href={cert.qrCode}
+                  download={`qr-${cert.certificateNumber}.png`}
+                  className="inline-block px-4 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm"
+                >
+                  Download QR
+                </a>
+                <a
+                  href={`/api/certificates/${cert.id}/download`}
+                  className="inline-block px-4 py-2 bg-[#1a2a3a] text-white rounded-md hover:bg-[#2a3a4a] transition-colors text-sm"
+                >
+                  Download PDF
+                </a>
+              </div>
+
+              {/* QR Image Link */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                <p className="text-xs text-gray-500 mb-1">QR Image Link</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={`${window.location.origin}/api/qr/${cert.certificateNumber}`}
+                    className="flex-1 text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-700"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/api/qr/${cert.certificateNumber}`);
+                    }}
+                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
             </>
           ) : (
             <p className="text-gray-400 text-sm">No QR code available</p>

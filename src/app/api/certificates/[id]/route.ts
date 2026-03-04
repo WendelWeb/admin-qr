@@ -23,3 +23,23 @@ export async function GET(
 
   return NextResponse.json(cert);
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const [deleted] = await db
+    .delete(certificates)
+    .where(eq(certificates.id, parseInt(id)))
+    .returning();
+
+  if (!deleted) {
+    return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ success: true });
+}

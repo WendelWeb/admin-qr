@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-export async function signToken(payload: { email: string }) {
-  return new SignJWT({ ...payload, role: "admin" })
+export async function signToken(payload: { email: string; role: string }) {
+  return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("24h")
     .sign(secret);

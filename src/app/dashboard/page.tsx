@@ -42,6 +42,15 @@ export default function DashboardPage() {
     fetchCertificates(search);
   }
 
+  async function handleDelete(id: number, name: string) {
+    if (!confirm(`Are you sure you want to delete the certificate for "${name}"?`)) return;
+
+    const res = await fetch(`/api/certificates/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setCertificates(certificates.filter((c) => c.id !== id));
+    }
+  }
+
   function formatDate(dateStr: string) {
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
@@ -66,7 +75,7 @@ export default function DashboardPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or certificate number..."
+            placeholder="Search by name, certificate #, access code, country, doctor..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
           />
           <button
@@ -118,12 +127,20 @@ export default function DashboardPage() {
                   <td className="px-4 py-3">{formatDate(cert.dateIssued)}</td>
                   <td className="px-4 py-3">{formatDate(cert.expiryDate)}</td>
                   <td className="px-4 py-3">
-                    <Link
-                      href={`/dashboard/certificates/${cert.id}`}
-                      className="text-[#386E65] hover:underline"
-                    >
-                      View
-                    </Link>
+                    <div className="flex gap-3">
+                      <Link
+                        href={`/dashboard/certificates/${cert.id}`}
+                        className="text-[#386E65] hover:underline"
+                      >
+                        View
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(cert.id, cert.name)}
+                        className="text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

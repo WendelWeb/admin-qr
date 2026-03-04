@@ -14,14 +14,20 @@ export async function GET(req: NextRequest) {
 
   let results;
   if (search) {
-    const searchNum = parseInt(search);
     results = await db
       .select()
       .from(certificates)
       .where(
         or(
           ilike(certificates.name, `%${search}%`),
-          ...(isNaN(searchNum) ? [] : [sql`${certificates.certificateNumber} = ${searchNum}`])
+          ilike(certificates.accessCode, `%${search}%`),
+          ilike(certificates.country, `%${search}%`),
+          ilike(certificates.examiningPhysician, `%${search}%`),
+          ilike(certificates.medicalOfficer, `%${search}%`),
+          sql`CAST(${certificates.certificateNumber} AS TEXT) ILIKE ${`%${search}%`}`,
+          sql`CAST(${certificates.dateOfBirth} AS TEXT) ILIKE ${`%${search}%`}`,
+          sql`CAST(${certificates.dateIssued} AS TEXT) ILIKE ${`%${search}%`}`,
+          sql`CAST(${certificates.expiryDate} AS TEXT) ILIKE ${`%${search}%`}`
         )
       )
       .orderBy(desc(certificates.createdAt));
@@ -60,7 +66,7 @@ export async function POST(req: NextRequest) {
 
   // Generate QR code
   const mainSiteUrl = process.env.NEXT_PUBLIC_MAIN_SITE_URL || "http://localhost:3000";
-  const validationUrl = `${mainSiteUrl}/certificates/validate?certification=${nextNumber}&validation=${accessCode}`;
+  const validationUrl = `${mainSiteUrl}/certificates/validate?certification=${nextNumber}`;
   const qrCodeDataUrl = await generateQrCode(validationUrl);
 
   // Insert
