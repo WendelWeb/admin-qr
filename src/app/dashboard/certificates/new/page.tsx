@@ -35,8 +35,23 @@ export default function NewCertificatePage() {
     });
   }, []);
 
+  function isWeekend(dateStr: string) {
+    const d = new Date(dateStr + "T00:00:00");
+    const day = d.getDay();
+    return day === 0 || day === 6; // Sunday = 0, Saturday = 6
+  }
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Block weekends for date issued only (not date of birth)
+    if (name === "dateIssued" && value && isWeekend(value)) {
+      setError("Saturdays and Sundays are not allowed for Date Issued.");
+      return;
+    }
+
+    setError("");
+    setForm({ ...form, [name]: value });
   }
 
   async function handleSubmit(e: React.FormEvent) {

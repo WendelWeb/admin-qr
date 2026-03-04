@@ -52,6 +52,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Date issued is required" }, { status: 400 });
   }
 
+  // Block weekends
+  const issuedDay = new Date(dateIssued + "T00:00:00").getDay();
+  if (issuedDay === 0 || issuedDay === 6) {
+    return NextResponse.json({ error: "Date issued cannot be a Saturday or Sunday" }, { status: 400 });
+  }
+
   // Get next certificate number
   const [maxResult] = await db
     .select({ max: sql<number>`COALESCE(MAX(${certificates.certificateNumber}), 88714999)` })
