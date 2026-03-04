@@ -8,11 +8,21 @@ const DOCSPRING_TOKEN_ID = "api_Jx72Zxtk6dMyYZ739H";
 const DOCSPRING_TOKEN_SECRET = "9tKdzcmS4qctmatMD2AT3MmHTr59X4qNNxXGQbmxeb";
 const DOCSPRING_TEMPLATE_ID = "tpl_m9by23NrfhptCLjpLd";
 
-function formatDate(dateStr: string): string {
+const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+// Date of birth: "15 Mar 1994"
+function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   const day = String(d.getDate()).padStart(2, "0");
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  return `${day} ${monthsShort[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// Date issued / Expiry: "05, November 2025"
+function formatDateFull(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${day}, ${monthsFull[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export async function GET(
@@ -47,9 +57,9 @@ export async function GET(
     "FULL NAME": cert.name,
     "CERTIFICATE NUMBER": cert.certificateNumber,
     "ACESS CODE": cert.accessCode,
-    "DATE OF BIRTH": formatDate(cert.dateOfBirth),
-    "DATE ISSUED": formatDate(cert.dateIssued),
-    "EXPIRY DATE": formatDate(cert.expiryDate),
+    "DATE OF BIRTH": formatDateShort(cert.dateOfBirth),
+    "DATE ISSUED": formatDateFull(cert.dateIssued),
+    "EXPIRY DATE": formatDateFull(cert.expiryDate),
   };
 
   if (qrBase64) {
