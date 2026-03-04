@@ -100,7 +100,7 @@ export async function GET(
     return new NextResponse(Buffer.from(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="certificate-${cert.certificateNumber}.pdf"`,
+        "Content-Disposition": `attachment; filename="${cert.name}.pdf"`,
       },
     });
   }
