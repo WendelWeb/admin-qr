@@ -1,0 +1,136 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+interface Certificate {
+  id: number;
+  name: string;
+  certificateNumber: number;
+  accessCode: string;
+  dateOfBirth: string;
+  dateIssued: string;
+  expiryDate: string;
+  country: string;
+  examiningPhysician: string;
+  medicalOfficer: string;
+  createdAt: string;
+}
+
+export default function DashboardPage() {
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, []);
+
+  async function fetchCertificates(query = "") {
+    setLoading(true);
+    const url = query ? `/api/certificates?search=${encodeURIComponent(query)}` : "/api/certificates";
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      setCertificates(data);
+    }
+    setLoading(false);
+  }
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    fetchCertificates(search);
+  }
+
+  function formatDate(dateStr: string) {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Certificates</h1>
+        <Link
+          href="/dashboard/certificates/new"
+          className="px-4 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm"
+        >
+          + New Certificate
+        </Link>
+      </div>
+
+      {/* Search */}
+      <form onSubmit={handleSearch} className="mb-4">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name or certificate number..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+          >
+            Search
+          </button>
+          {search && (
+            <button
+              type="button"
+              onClick={() => { setSearch(""); fetchCertificates(); }}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Cert #</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Access Code</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Date Issued</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Expiry</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="text-center py-8 text-gray-500">Loading...</td>
+              </tr>
+            ) : certificates.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center py-8 text-gray-500">No certificates found</td>
+              </tr>
+            ) : (
+              certificates.map((cert) => (
+                <tr key={cert.id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-3 font-mono">{cert.certificateNumber}</td>
+                  <td className="px-4 py-3">{cert.name}</td>
+                  <td className="px-4 py-3 font-mono">{cert.accessCode}</td>
+                  <td className="px-4 py-3">{formatDate(cert.dateIssued)}</td>
+                  <td className="px-4 py-3">{formatDate(cert.expiryDate)}</td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/dashboard/certificates/${cert.id}`}
+                      className="text-[#386E65] hover:underline"
+                    >
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

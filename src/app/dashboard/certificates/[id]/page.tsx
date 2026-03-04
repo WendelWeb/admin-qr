@@ -1,0 +1,115 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+
+interface Certificate {
+  id: number;
+  name: string;
+  certificateNumber: number;
+  accessCode: string;
+  dateOfBirth: string;
+  dateIssued: string;
+  expiryDate: string;
+  country: string;
+  examiningPhysician: string;
+  medicalOfficer: string;
+  qrCode: string | null;
+  createdAt: string;
+}
+
+export default function CertificateDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const [cert, setCert] = useState<Certificate | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const res = await fetch(`/api/certificates/${params.id}`);
+      if (res.ok) {
+        setCert(await res.json());
+      }
+      setLoading(false);
+    }
+    load();
+  }, [params.id]);
+
+  function formatDate(dateStr: string) {
+    const d = new Date(dateStr + "T00:00:00");
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  if (loading) {
+    return <div className="text-gray-500">Loading...</div>;
+  }
+
+  if (!cert) {
+    return <div className="text-red-600">Certificate not found</div>;
+  }
+
+  const fields = [
+    { label: "Certificate Number", value: cert.certificateNumber },
+    { label: "Full Name", value: cert.name },
+    { label: "Date of Birth", value: formatDate(cert.dateOfBirth) },
+    { label: "Country", value: cert.country },
+    { label: "Examining Physician", value: cert.examiningPhysician },
+    { label: "Date Issued", value: formatDate(cert.dateIssued) },
+    { label: "Expiry Date", value: formatDate(cert.expiryDate) },
+    { label: "Medical Officer", value: cert.medicalOfficer },
+    { label: "Access Code", value: cert.accessCode },
+  ];
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          &larr; Back
+        </button>
+        <h1 className="text-2xl font-bold text-gray-800">Certificate #{cert.certificateNumber}</h1>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Details */}
+        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+          <div className="space-y-3">
+            {fields.map((f) => (
+              <div key={f.label} className="flex items-center border-b border-gray-100 pb-2">
+                <span className="w-48 text-sm text-gray-500 flex-shrink-0">{f.label}</span>
+                <span className="text-sm font-medium text-gray-800">{f.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* QR Code */}
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <h3 className="text-sm font-medium text-gray-600 mb-4">QR Code</h3>
+          {cert.qrCode ? (
+            <>
+              <img
+                src={cert.qrCode}
+                alt="Certificate QR Code"
+                className="mx-auto mb-4"
+                style={{ width: 200, height: 200 }}
+              />
+              <a
+                href={cert.qrCode}
+                download={`qr-${cert.certificateNumber}.png`}
+                className="inline-block px-4 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm"
+              >
+                Download QR
+              </a>
+            </>
+          ) : (
+            <p className="text-gray-400 text-sm">No QR code available</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
