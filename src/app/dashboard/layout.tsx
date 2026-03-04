@@ -2,10 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => { if (data.role) setRole(data.role); });
+  }, []);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -19,6 +27,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: "/dashboard/costs", label: "Operating Costs", icon: "💰" },
     { href: "/dashboard/settings", label: "Settings", icon: "⚙️" },
   ];
+
+  // Super admin only
+  if (role === "super_admin") {
+    navItems.push({ href: "/dashboard/admins", label: "Admin Management", icon: "🔐" });
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-100">
