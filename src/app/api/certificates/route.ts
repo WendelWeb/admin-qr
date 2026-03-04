@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   const expiryDate = expiry.toISOString().split("T")[0];
 
   // Generate QR code
-  const mainSiteUrl = process.env.NEXT_PUBLIC_MAIN_SITE_URL || "http://localhost:3000";
+  const mainSiteUrl = process.env.NEXT_PUBLIC_MAIN_SITE_URL || "https://healthcertificategov-tc.org";
   const validationUrl = `${mainSiteUrl}/certificates/validate?certification=${nextNumber}`;
   const qrCodeDataUrl = await generateQrCode(validationUrl);
 
