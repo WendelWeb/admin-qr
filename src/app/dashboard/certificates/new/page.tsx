@@ -18,6 +18,8 @@ export default function NewCertificatePage() {
   const [form, setForm] = useState({
     name: "",
     dateOfBirth: "",
+    dateIssued: "",
+    validityYears: "2",
     country: "Turks and Caicos Islands",
     examiningPhysician: "",
     medicalOfficer: "",
@@ -70,7 +72,7 @@ export default function NewCertificatePage() {
 
       <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
         <p className="text-sm text-gray-500 mb-4">
-          Certificate number, access code, QR code, and dates will be generated automatically.
+          Certificate number, access code, and QR code will be generated automatically.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,6 +99,42 @@ export default function NewCertificatePage() {
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Issued *</label>
+            <input
+              type="date"
+              name="dateIssued"
+              value={form.dateIssued}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Certificate Validity *</label>
+            <select
+              name="validityYears"
+              value={form.validityYears}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+            >
+              <option value="1">1 year</option>
+              <option value="2">2 years</option>
+              <option value="3">3 years</option>
+            </select>
+            {form.dateIssued && (
+              <p className="text-xs text-gray-400 mt-1">
+                Expires: {(() => {
+                  const d = new Date(form.dateIssued + "T00:00:00");
+                  d.setFullYear(d.getFullYear() + parseInt(form.validityYears));
+                  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "long", year: "numeric" });
+                })()}
+              </p>
+            )}
           </div>
 
           <div>

@@ -46,7 +46,11 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { name, dateOfBirth, country, examiningPhysician, medicalOfficer } = body;
+  const { name, dateOfBirth, dateIssued, validityYears, country, examiningPhysician, medicalOfficer } = body;
+
+  if (!dateIssued) {
+    return NextResponse.json({ error: "Date issued is required" }, { status: 400 });
+  }
 
   // Get next certificate number
   const [maxResult] = await db
@@ -57,11 +61,11 @@ export async function POST(req: NextRequest) {
   // Generate access code
   const accessCode = generateAccessCode();
 
-  // Compute dates
-  const dateIssued = new Date().toISOString().split("T")[0];
+  // Compute expiry date based on chosen validity (1, 2, or 3 years)
   const issuedDate = new Date(dateIssued + "T00:00:00");
   const expiry = new Date(issuedDate);
-  expiry.setFullYear(expiry.getFullYear() + 3);
+  const years = parseInt(validityYears) || 2;
+  expiry.setFullYear(expiry.getFullYear() + years);
   const expiryDate = expiry.toISOString().split("T")[0];
 
   // Generate QR code
