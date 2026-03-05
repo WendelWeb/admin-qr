@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { certificates } from "@/db/schema";
-import { desc, or, ilike, sql } from "drizzle-orm";
+import { certificates, settings } from "@/db/schema";
+import { desc, or, ilike, sql, eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { generateAccessCode } from "@/lib/generate-access-code";
 import { generateQrCode } from "@/lib/generate-qr-code";
@@ -44,6 +44,13 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Check credits
+  const [config] = await db.select().from(settings).limit(1);
+  const currentCredits = config?.credits ?? 0;
+  if (currentCredits <= 0) {
+    return NextResponse.json({ error: "Insufficient credits. Please contact the super admin to add more credits." }, { status: 403 });
+  }
 
   const body = await req.json();
   const { name, dateOfBirth, dateIssued, validityYears, country, examiningPhysician, medicalOfficer } = body;
@@ -92,6 +99,14 @@ export async function POST(req: NextRequest) {
     medicalOfficer,
     qrCode: qrCodeDataUrl,
   }).returning();
+
+  // Decrement credits
+  if (config) {
+    await db
+      .update(settings)
+      .set({ credits: currentCredits - 1, updatedAt: new Date() })
+      .where(eq(settings.id, config.id));
+  }
 
   return NextResponse.json(newCert, { status: 201 });
 }

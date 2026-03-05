@@ -8,16 +8,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const router = useRouter();
   const [role, setRole] = useState("");
+  const [credits, setCredits] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => { if (data.role) setRole(data.role); });
+
+    fetch("/api/credits")
+      .then((r) => r.json())
+      .then((data) => { if (typeof data.credits === "number") setCredits(data.credits); });
   }, []);
 
-  // Close sidebar on route change
+  // Refresh credits when navigating (e.g. after creating a certificate)
   useEffect(() => {
+    fetch("/api/credits")
+      .then((r) => r.json())
+      .then((data) => { if (typeof data.credits === "number") setCredits(data.credits); });
     setSidebarOpen(false);
   }, [pathname]);
 
@@ -36,6 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Super admin only
   if (role === "super_admin") {
+    navItems.push({ href: "/dashboard/credits", label: "Credits", icon: "🎫" });
     navItems.push({ href: "/dashboard/admins", label: "Admin Management", icon: "🔐" });
   }
 
@@ -53,7 +62,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </svg>
         </button>
         <h2 className="text-base font-bold">MHU Admin</h2>
-        <div className="w-10" /> {/* Spacer for centering */}
+        {/* Credits badge - mobile */}
+        <div className="flex items-center gap-1.5">
+          {credits !== null && (
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              credits === 0
+                ? "bg-red-500/20 text-red-300"
+                : "bg-[#386E65]/30 text-emerald-300"
+            }`}>
+              {credits}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Backdrop overlay */}
@@ -89,6 +109,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </svg>
           </button>
         </div>
+
+        {/* Credits indicator in sidebar */}
+        {credits !== null && (
+          <div className="mx-4 mt-4 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400 uppercase tracking-wide">Credits</span>
+              <span className={`text-lg font-bold ${
+                credits === 0 ? "text-red-400" : "text-emerald-400"
+              }`}>
+                {credits}
+              </span>
+            </div>
+            <div className="mt-1.5 w-full bg-gray-700 rounded-full h-1.5">
+              <div
+                className={`h-1.5 rounded-full transition-all ${
+                  credits === 0 ? "bg-red-500" : "bg-emerald-500"
+                }`}
+                style={{ width: `${Math.min((credits / Math.max(credits, 50)) * 100, 100)}%` }}
+              />
+            </div>
+            {credits === 0 && (
+              <p className="text-xs text-red-400 mt-1.5">No credits remaining</p>
+            )}
+          </div>
+        )}
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
