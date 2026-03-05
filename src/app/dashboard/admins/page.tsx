@@ -105,7 +105,7 @@ export default function AdminsPage() {
   if (role !== "super_admin") {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Admin Management</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Admin Management</h1>
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
           <p className="text-yellow-800 text-sm">Only the super admin can manage admin accounts.</p>
         </div>
@@ -117,11 +117,11 @@ export default function AdminsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Management</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Admin Management</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Add Admin */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-1">Add New Admin</h2>
           <p className="text-xs text-gray-400 mb-4">Create a new admin account. They will be able to create and manage certificates.</p>
 
@@ -164,76 +164,80 @@ export default function AdminsPage() {
         </div>
 
         {/* Admin List */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">Current Admins</h2>
 
           <div className="space-y-3">
             {admins.map((admin) => (
               <div
                 key={admin.id}
-                className="flex items-center gap-3 p-3 rounded-md border border-gray-100 hover:bg-gray-50"
+                className="p-3 rounded-md border border-gray-100 hover:bg-gray-50"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{admin.email}</p>
-                  <p className="text-xs text-gray-400">
-                    {admin.role === "super_admin" ? "Super Admin" : "Admin"}
-                    {" - "}
-                    {new Date(admin.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
-                  </p>
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{admin.email}</p>
+                    <p className="text-xs text-gray-400">
+                      {admin.role === "super_admin" ? "Super Admin" : "Admin"}
+                      {" - "}
+                      {new Date(admin.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                    </p>
+                  </div>
+
+                  {admin.role !== "super_admin" && !resetId && (
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => { setResetId(admin.id); setResetPassword(""); setResetError(""); }}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => handleDelete(admin)}
+                        className="text-xs text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {admin.role !== "super_admin" && (
-                  <div className="flex gap-2 shrink-0">
-                    {resetId === admin.id ? (
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="text"
-                          value={resetPassword}
-                          onChange={(e) => setResetPassword(e.target.value)}
-                          placeholder="New password"
-                          className="w-28 px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-[#386E65]"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleResetPassword(admin.id);
-                            if (e.key === "Escape") { setResetId(null); setResetPassword(""); setResetError(""); }
-                          }}
-                        />
+                {/* Reset password inline - shown below on mobile */}
+                {admin.role !== "super_admin" && resetId === admin.id && (
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <input
+                        type="text"
+                        value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)}
+                        placeholder="New password"
+                        className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#386E65]"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleResetPassword(admin.id);
+                          if (e.key === "Escape") { setResetId(null); setResetPassword(""); setResetError(""); }
+                        }}
+                      />
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handleResetPassword(admin.id)}
-                          className="text-xs text-green-600 hover:text-green-800 font-medium"
+                          className="text-xs text-green-600 hover:text-green-800 font-medium px-2 py-1"
                         >
                           Save
                         </button>
                         <button
                           onClick={() => { setResetId(null); setResetPassword(""); setResetError(""); }}
-                          className="text-xs text-gray-500 hover:text-gray-700"
+                          className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
                         >
                           Cancel
                         </button>
                       </div>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => { setResetId(admin.id); setResetPassword(""); setResetError(""); }}
-                          className="text-xs text-blue-600 hover:text-blue-800"
-                        >
-                          Reset password
-                        </button>
-                        <button
-                          onClick={() => handleDelete(admin)}
-                          className="text-xs text-red-600 hover:text-red-800"
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
+                    </div>
+                    {resetError && <p className="text-red-600 text-xs mt-1">{resetError}</p>}
                   </div>
                 )}
               </div>
             ))}
           </div>
-
-          {resetError && <p className="text-red-600 text-sm mt-2">{resetError}</p>}
         </div>
       </div>
     </div>

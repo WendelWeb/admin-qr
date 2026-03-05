@@ -168,11 +168,11 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Settings</h1>
 
       <div className="space-y-6 max-w-lg">
         {/* Change Password */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">Change Password</h2>
 
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -223,7 +223,7 @@ export default function SettingsPage() {
         </div>
 
         {/* PDF Template */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-1">Certificate Template</h2>
           <p className="text-xs text-gray-400 mb-4">
             Upload a PDF template. Certificate data and QR code will be overlaid on top.
@@ -231,10 +231,10 @@ export default function SettingsPage() {
 
           {templateName ? (
             <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-md mb-4">
-              <span className="text-green-700 text-sm font-medium">{templateName}</span>
+              <span className="text-green-700 text-sm font-medium truncate min-w-0 flex-1">{templateName}</span>
               <button
                 onClick={handleTemplateDelete}
-                className="ml-auto text-xs text-red-600 hover:text-red-800 underline"
+                className="text-xs text-red-600 hover:text-red-800 underline shrink-0"
               >
                 Remove
               </button>
@@ -260,7 +260,7 @@ export default function SettingsPage() {
 
         {/* QR Price - Super Admin Only */}
         {role === "super_admin" && (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
             <h2 className="text-lg font-semibold text-gray-700 mb-1">QR Code Price</h2>
             <p className="text-xs text-gray-400 mb-4">Only visible to super admins</p>
 

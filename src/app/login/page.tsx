@@ -36,10 +36,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md w-full max-w-md">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">MHU Admin</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">MHU Admin</h1>
           <p className="text-gray-500 text-sm mt-1">Migrant Health Unit - Certificate Management</p>
         </div>
 
@@ -75,7 +75,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 px-4 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2.5 px-4 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>

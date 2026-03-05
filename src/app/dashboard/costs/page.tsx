@@ -68,49 +68,49 @@ export default function CostsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Operating Costs</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Operating Costs</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">QR Code Price</p>
-          <p className="text-2xl font-bold text-gray-800 mt-1">${stats.qrPrice.toFixed(2)}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">QR Price</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">${stats.qrPrice.toFixed(2)}</p>
           <p className="text-xs text-gray-400 mt-1">per certificate</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-5">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Current Period</p>
-          <p className="text-2xl font-bold text-[#386E65] mt-1">${stats.currentPeriod.cost}</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#386E65] mt-1">${stats.currentPeriod.cost}</p>
           <p className="text-xs text-gray-400 mt-1">
-            {stats.currentPeriod.label} ({stats.currentPeriod.count} certs)
+            {stats.currentPeriod.count} certs
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Total Certificates</p>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{stats.totalCertificates}</p>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wide">Total Certs</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{stats.totalCertificates}</p>
           <p className="text-xs text-gray-400 mt-1">all time</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-5">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Total Cost</p>
-          <p className="text-2xl font-bold text-gray-800 mt-1">${stats.totalCost}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">${stats.totalCost}</p>
           <p className="text-xs text-gray-400 mt-1">all time</p>
         </div>
       </div>
 
       {/* Current Billing Period Highlight */}
-      <div className="bg-[#386E65] text-white rounded-lg shadow p-6 mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="bg-[#386E65] text-white rounded-lg shadow p-4 sm:p-6 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Current Billing Period</h2>
+            <h2 className="text-base sm:text-lg font-semibold">Current Billing Period</h2>
             <p className="text-sm opacity-80 mt-1">{stats.currentPeriod.label}</p>
             <p className="text-xs opacity-60 mt-0.5">
               {stats.currentPeriod.start} to {stats.currentPeriod.end}
             </p>
           </div>
-          <div className="mt-4 md:mt-0 text-right">
-            <p className="text-3xl font-bold">${stats.currentPeriod.cost}</p>
+          <div className="mt-3 sm:mt-0 sm:text-right">
+            <p className="text-2xl sm:text-3xl font-bold">${stats.currentPeriod.cost}</p>
             <p className="text-sm opacity-80">
               {stats.currentPeriod.count} certificates x ${stats.qrPrice.toFixed(2)}
             </p>
@@ -119,12 +119,12 @@ export default function CostsPage() {
       </div>
 
       {/* View Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto">
         {(["billing", "daily", "monthly"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setView(tab)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
               view === tab
                 ? "bg-[#386E65] text-white"
                 : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
@@ -135,55 +135,86 @@ export default function CostsPage() {
         ))}
       </div>
 
-      {/* Billing Periods Table */}
+      {/* Billing Periods */}
       {view === "billing" && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Period</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Dates</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Certificates</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Amount Due</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Current period */}
-              <tr className="border-b bg-green-50">
-                <td className="py-3 px-4 font-medium text-[#386E65]">
-                  {stats.currentPeriod.label}
-                  <span className="ml-2 text-xs bg-[#386E65] text-white px-2 py-0.5 rounded-full">
-                    Current
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-gray-600">
-                  {stats.currentPeriod.start} to {stats.currentPeriod.end}
-                </td>
-                <td className="py-3 px-4 text-right font-medium">{stats.currentPeriod.count}</td>
-                <td className="py-3 px-4 text-right font-bold text-[#386E65]">
-                  ${stats.currentPeriod.cost}
-                </td>
-              </tr>
-
-              {/* Previous periods */}
-              {stats.previousPeriods.map((period, i) => (
-                <tr key={i} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 font-medium text-gray-700">{period.label}</td>
-                  <td className="py-3 px-4 text-gray-600">
-                    {period.start} to {period.end}
-                  </td>
-                  <td className="py-3 px-4 text-right">{period.count}</td>
-                  <td className="py-3 px-4 text-right font-semibold">${period.cost}</td>
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b">
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Period</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-600">Dates</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-600">Certificates</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-600">Amount Due</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {/* Current period */}
+                <tr className="border-b bg-green-50">
+                  <td className="py-3 px-4 font-medium text-[#386E65]">
+                    {stats.currentPeriod.label}
+                    <span className="ml-2 text-xs bg-[#386E65] text-white px-2 py-0.5 rounded-full">
+                      Current
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-600">
+                    {stats.currentPeriod.start} to {stats.currentPeriod.end}
+                  </td>
+                  <td className="py-3 px-4 text-right font-medium">{stats.currentPeriod.count}</td>
+                  <td className="py-3 px-4 text-right font-bold text-[#386E65]">
+                    ${stats.currentPeriod.cost}
+                  </td>
+                </tr>
+
+                {/* Previous periods */}
+                {stats.previousPeriods.map((period, i) => (
+                  <tr key={i} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4 font-medium text-gray-700">{period.label}</td>
+                    <td className="py-3 px-4 text-gray-600">
+                      {period.start} to {period.end}
+                    </td>
+                    <td className="py-3 px-4 text-right">{period.count}</td>
+                    <td className="py-3 px-4 text-right font-semibold">${period.cost}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-3">
+            {/* Current period */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium text-[#386E65]">{stats.currentPeriod.label}</span>
+                <span className="text-xs bg-[#386E65] text-white px-2 py-0.5 rounded-full">Current</span>
+              </div>
+              <p className="text-xs text-gray-500 mb-2">{stats.currentPeriod.start} to {stats.currentPeriod.end}</p>
+              <div className="flex justify-between items-end">
+                <span className="text-xs text-gray-500">{stats.currentPeriod.count} certificates</span>
+                <span className="text-lg font-bold text-[#386E65]">${stats.currentPeriod.cost}</span>
+              </div>
+            </div>
+
+            {/* Previous periods */}
+            {stats.previousPeriods.map((period, i) => (
+              <div key={i} className="bg-white rounded-lg shadow p-4">
+                <p className="text-sm font-medium text-gray-700 mb-1">{period.label}</p>
+                <p className="text-xs text-gray-500 mb-2">{period.start} to {period.end}</p>
+                <div className="flex justify-between items-end">
+                  <span className="text-xs text-gray-500">{period.count} certificates</span>
+                  <span className="text-base font-semibold text-gray-800">${period.cost}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Daily Chart */}
       {view === "daily" && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 className="text-sm font-semibold text-gray-600 mb-4">
             Daily Breakdown - {stats.currentPeriod.label}
           </h3>
@@ -192,8 +223,8 @@ export default function CostsPage() {
           ) : (
             <div className="space-y-2">
               {stats.daily.map((day) => (
-                <div key={day.date} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 w-16 shrink-0">
+                <div key={day.date} className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-xs text-gray-500 w-14 sm:w-16 shrink-0">
                     {formatDateShort(day.date)}
                   </span>
                   <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
@@ -204,7 +235,7 @@ export default function CostsPage() {
                       <span className="text-xs text-white font-medium">{day.count}</span>
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500 w-16 text-right">
+                  <span className="text-xs text-gray-500 w-14 sm:w-16 text-right">
                     ${(day.count * stats.qrPrice).toFixed(2)}
                   </span>
                 </div>
@@ -216,26 +247,26 @@ export default function CostsPage() {
 
       {/* Monthly Chart */}
       {view === "monthly" && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 className="text-sm font-semibold text-gray-600 mb-4">Monthly Overview (Last 6 Months)</h3>
           {stats.monthly.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-8">No data yet</p>
           ) : (
             <div className="space-y-3">
               {stats.monthly.map((month) => (
-                <div key={month.month} className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 w-20 shrink-0">
+                <div key={month.month} className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-xs text-gray-500 w-16 sm:w-20 shrink-0">
                     {formatMonth(month.month)}
                   </span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-8 overflow-hidden">
+                  <div className="flex-1 bg-gray-100 rounded-full h-7 sm:h-8 overflow-hidden">
                     <div
-                      className="bg-[#1a2a3a] h-full rounded-full flex items-center justify-end pr-3 transition-all"
+                      className="bg-[#1a2a3a] h-full rounded-full flex items-center justify-end pr-2 sm:pr-3 transition-all"
                       style={{ width: `${Math.max((month.count / maxMonthly) * 100, 10)}%` }}
                     >
                       <span className="text-xs text-white font-medium">{month.count}</span>
                     </div>
                   </div>
-                  <span className="text-sm text-gray-600 w-20 text-right font-medium">
+                  <span className="text-xs sm:text-sm text-gray-600 w-16 sm:w-20 text-right font-medium">
                     ${(month.count * stats.qrPrice).toFixed(2)}
                   </span>
                 </div>

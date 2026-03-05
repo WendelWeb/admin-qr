@@ -152,12 +152,12 @@ export default function NewCertificatePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-2">New Certificate</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">New Certificate</h1>
       <p className="text-sm text-gray-500 mb-6">
         Fill in the details below. Certificate number, access code, and QR code will be generated automatically.
       </p>
 
-      <div className="bg-white rounded-lg shadow p-6 max-w-2xl">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Full Name */}
@@ -363,7 +363,7 @@ export default function NewCertificatePage() {
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
               disabled={loading || issuedIsWeekend}

@@ -24,6 +24,7 @@ export default function CertificateDetailPage() {
   const router = useRouter();
   const [cert, setCert] = useState<Certificate | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -63,21 +64,23 @@ export default function CertificateDetailPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
         <button
           onClick={() => router.push("/dashboard")}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-gray-500 hover:text-gray-700 self-start"
         >
           &larr; Back
         </button>
-        <h1 className="text-2xl font-bold text-gray-800">Certificate #{cert.certificateNumber}</h1>
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
+          Certificate #{cert.certificateNumber}
+        </h1>
         <button
           onClick={async () => {
             if (!confirm(`Delete certificate #${cert.certificateNumber} for "${cert.name}"?`)) return;
             const res = await fetch(`/api/certificates/${cert.id}`, { method: "DELETE" });
             if (res.ok) router.push("/dashboard");
           }}
-          className="ml-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm"
+          className="sm:ml-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm self-start"
         >
           Delete
         </button>
@@ -85,11 +88,11 @@ export default function CertificateDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Details */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
+        <div className="lg:col-span-2 bg-white rounded-lg shadow p-4 sm:p-6">
           <div className="space-y-3">
             {fields.map((f) => (
-              <div key={f.label} className="flex items-center border-b border-gray-100 pb-2">
-                <span className="w-48 text-sm text-gray-500 flex-shrink-0">{f.label}</span>
+              <div key={f.label} className="flex flex-col sm:flex-row sm:items-center border-b border-gray-100 pb-2">
+                <span className="text-xs sm:text-sm text-gray-500 sm:w-48 sm:flex-shrink-0 mb-0.5 sm:mb-0">{f.label}</span>
                 <span className="text-sm font-medium text-gray-800">{f.value}</span>
               </div>
             ))}
@@ -97,15 +100,14 @@ export default function CertificateDetailPage() {
         </div>
 
         {/* QR Code */}
-        <div className="bg-white rounded-lg shadow p-6 text-center">
+        <div className="bg-white rounded-lg shadow p-4 sm:p-6 text-center">
           <h3 className="text-sm font-medium text-gray-600 mb-4">QR Code</h3>
           {cert.qrCode ? (
             <>
               <img
                 src={cert.qrCode}
                 alt="Certificate QR Code"
-                className="mx-auto mb-4"
-                style={{ width: 200, height: 200 }}
+                className="mx-auto mb-4 w-40 h-40 sm:w-[200px] sm:h-[200px]"
               />
               <div className="flex flex-col gap-2">
                 <a
@@ -130,16 +132,18 @@ export default function CertificateDetailPage() {
                   <input
                     type="text"
                     readOnly
-                    value={`${window.location.origin}/api/qr/${cert.certificateNumber}`}
-                    className="flex-1 text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-700"
+                    value={`${typeof window !== "undefined" ? window.location.origin : ""}/api/qr/${cert.certificateNumber}`}
+                    className="flex-1 min-w-0 text-xs px-2 py-1 bg-white border border-gray-200 rounded text-gray-700"
                   />
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(`${window.location.origin}/api/qr/${cert.certificateNumber}`);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition-colors"
+                    className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition-colors shrink-0"
                   >
-                    Copy
+                    {copied ? "Copied!" : "Copy"}
                   </button>
                 </div>
               </div>
