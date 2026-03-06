@@ -20,6 +20,7 @@ export const certificates = pgTable("certificates", {
   examiningPhysician: text("examining_physician").notNull(),
   medicalOfficer: text("medical_officer").notNull(),
   qrCode: text("qr_code"),
+  createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

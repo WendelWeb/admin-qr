@@ -198,7 +198,7 @@ export default function NewCertificatePage() {
             </div>
             <h3 className="text-lg font-semibold text-red-800 mb-2">Insufficient Credits</h3>
             <p className="text-sm text-red-600 mb-4">
-              There are no credits remaining to create new certificates. Please contact the super administrator to add more credits to continue.
+              There are no credits remaining to create new certificates. Additional credits must be purchased before certificate generation can resume. Each credit allows the creation of one certificate.
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 rounded-lg">
               <span className="text-2xl font-bold text-red-500">0</span>

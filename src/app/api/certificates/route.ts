@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   // Check credits
   const currentCredits = config?.credits ?? 0;
   if (currentCredits <= 0) {
-    return NextResponse.json({ error: "Insufficient credits. Please contact the super admin to add more credits." }, { status: 403 });
+    return NextResponse.json({ error: "Insufficient credits. Additional credits must be purchased before new certificates can be created." }, { status: 403 });
   }
 
   const body = await req.json();
@@ -105,6 +105,7 @@ export async function POST(req: NextRequest) {
     examiningPhysician,
     medicalOfficer,
     qrCode: qrCodeDataUrl,
+    createdBy: (session.email as string) || null,
   }).returning();
 
   // Decrement credits
