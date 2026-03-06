@@ -4,29 +4,51 @@ import { db } from "@/db";
 import { certificates, settings } from "@/db/schema";
 import { sql, gte, lte, and } from "drizzle-orm";
 
+// Billing cycle: 4th of each month to 3rd of next month
 function getBillingPeriod(date: Date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   const day = date.getDate();
 
-  if (day <= 15) {
+  if (day >= 4) {
+    // Current period: 4th of this month → 3rd of next month
     return {
-      start: new Date(year, month, 1),
-      end: new Date(year, month, 15, 23, 59, 59, 999),
-      label: `1 - 15`,
+      start: new Date(year, month, 4),
+      end: new Date(year, month + 1, 3, 23, 59, 59, 999),
     };
   } else {
-    const lastDay = new Date(year, month + 1, 0).getDate();
+    // Before the 4th: period is 4th of previous month → 3rd of this month
     return {
-      start: new Date(year, month, 16),
-      end: new Date(year, month, lastDay, 23, 59, 59, 999),
-      label: `16 - ${lastDay}`,
+      start: new Date(year, month - 1, 4),
+      end: new Date(year, month, 3, 23, 59, 59, 999),
     };
+  }
+}
+
+function getNextBillingDate(date: Date) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+
+  if (day >= 4) {
+    return new Date(year, month + 1, 4);
+  } else {
+    return new Date(year, month, 4);
   }
 }
 
 function formatDate(d: Date) {
   return d.toISOString().split("T")[0];
+}
+
+function formatPeriodLabel(start: Date, end: Date) {
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const s = `${months[start.getMonth()]} ${start.getDate()}, ${start.getFullYear()}`;
+  const e = `${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+  return `${s} — ${e}`;
 }
 
 export async function GET() {
@@ -36,10 +58,15 @@ export async function GET() {
   }
 
   const [config] = await db.select().from(settings).limit(1);
-  const qrPrice = parseFloat(config?.qrPrice ?? "1.50");
+  const qrPrice = parseFloat(config?.qrPrice ?? "0.40");
 
   const now = new Date();
   const currentPeriod = getBillingPeriod(now);
+  const nextBilling = getNextBillingDate(now);
+
+  // Days until next billing
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysUntilBilling = Math.ceil((nextBilling.getTime() - now.getTime()) / msPerDay);
 
   // Current billing period count
   const [currentCount] = await db
@@ -82,19 +109,13 @@ export async function GET() {
 
   // Previous 5 billing periods
   const previousPeriods = [];
-  let tempDate = new Date(now);
+  let tempDate = new Date(currentPeriod.start);
 
   for (let i = 0; i < 5; i++) {
-    // Go to previous period
-    if (tempDate.getDate() <= 15) {
-      // Go to 16-end of previous month
-      tempDate = new Date(tempDate.getFullYear(), tempDate.getMonth() - 1, 16);
-    } else {
-      // Go to 1-15 of same month
-      tempDate = new Date(tempDate.getFullYear(), tempDate.getMonth(), 1);
-    }
-
+    // Go to previous period (subtract 1 day from start to land in previous period)
+    tempDate = new Date(tempDate.getTime() - msPerDay);
     const period = getBillingPeriod(tempDate);
+
     const [count] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(certificates)
@@ -105,24 +126,16 @@ export async function GET() {
         )
       );
 
-    const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
-
     previousPeriods.push({
       start: formatDate(period.start),
       end: formatDate(period.end),
-      label: `${months[period.start.getMonth()]} ${period.label}, ${period.start.getFullYear()}`,
+      label: formatPeriodLabel(period.start, period.end),
       count: count.count,
       cost: (count.count * qrPrice).toFixed(2),
     });
-  }
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
+    tempDate = new Date(period.start);
+  }
 
   // Total all-time
   const [totalCount] = await db
@@ -134,10 +147,12 @@ export async function GET() {
     currentPeriod: {
       start: formatDate(currentPeriod.start),
       end: formatDate(currentPeriod.end),
-      label: `${months[currentPeriod.start.getMonth()]} ${currentPeriod.label}, ${currentPeriod.start.getFullYear()}`,
+      label: formatPeriodLabel(currentPeriod.start, currentPeriod.end),
       count: currentCount.count,
       cost: (currentCount.count * qrPrice).toFixed(2),
     },
+    nextBillingDate: formatDate(nextBilling),
+    daysUntilBilling,
     daily: dailyBreakdown,
     monthly: monthlyBreakdown,
     previousPeriods,

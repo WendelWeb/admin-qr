@@ -11,6 +11,8 @@ interface Stats {
     count: number;
     cost: string;
   };
+  nextBillingDate: string;
+  daysUntilBilling: number;
   daily: { date: string; count: number }[];
   monthly: { month: string; count: number }[];
   previousPeriods: {
@@ -28,6 +30,12 @@ function formatDateShort(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+function formatDateFull(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00");
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
 function formatMonth(monthStr: string) {
@@ -70,6 +78,43 @@ export default function CostsPage() {
     <div>
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Operating Costs</h1>
 
+      {/* Next Billing Date - Payment Reminder */}
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 sm:p-5 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-amber-800">Next Payment Due</h3>
+              <p className="text-lg font-bold text-amber-900 mt-0.5">
+                {formatDateFull(stats.nextBillingDate)}
+              </p>
+              <p className="text-xs text-amber-600 mt-1">
+                Payment is mandatory on the 4th of each month. Failure to pay on time may result in service interruption.
+              </p>
+            </div>
+          </div>
+          <div className="sm:text-right">
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${
+              stats.daysUntilBilling <= 3
+                ? "bg-red-100 text-red-700"
+                : stats.daysUntilBilling <= 7
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-emerald-100 text-emerald-700"
+            }`}>
+              <span className="text-lg">{stats.daysUntilBilling}</span>
+              <span className="text-xs">day{stats.daysUntilBilling !== 1 ? "s" : ""} left</span>
+            </div>
+            <p className="text-xs text-amber-600 mt-1.5">
+              Amount due: <strong className="text-amber-800">${stats.currentPeriod.cost}</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
         <div className="bg-white rounded-lg shadow p-4 sm:p-5">
@@ -105,9 +150,6 @@ export default function CostsPage() {
           <div>
             <h2 className="text-base sm:text-lg font-semibold">Current Billing Period</h2>
             <p className="text-sm opacity-80 mt-1">{stats.currentPeriod.label}</p>
-            <p className="text-xs opacity-60 mt-0.5">
-              {stats.currentPeriod.start} to {stats.currentPeriod.end}
-            </p>
           </div>
           <div className="mt-3 sm:mt-0 sm:text-right">
             <p className="text-2xl sm:text-3xl font-bold">${stats.currentPeriod.cost}</p>
@@ -144,7 +186,6 @@ export default function CostsPage() {
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="text-left py-3 px-4 font-medium text-gray-600">Period</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-600">Dates</th>
                   <th className="text-right py-3 px-4 font-medium text-gray-600">Certificates</th>
                   <th className="text-right py-3 px-4 font-medium text-gray-600">Amount Due</th>
                 </tr>
@@ -158,9 +199,6 @@ export default function CostsPage() {
                       Current
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-600">
-                    {stats.currentPeriod.start} to {stats.currentPeriod.end}
-                  </td>
                   <td className="py-3 px-4 text-right font-medium">{stats.currentPeriod.count}</td>
                   <td className="py-3 px-4 text-right font-bold text-[#386E65]">
                     ${stats.currentPeriod.cost}
@@ -171,9 +209,6 @@ export default function CostsPage() {
                 {stats.previousPeriods.map((period, i) => (
                   <tr key={i} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4 font-medium text-gray-700">{period.label}</td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {period.start} to {period.end}
-                    </td>
                     <td className="py-3 px-4 text-right">{period.count}</td>
                     <td className="py-3 px-4 text-right font-semibold">${period.cost}</td>
                   </tr>
@@ -190,8 +225,7 @@ export default function CostsPage() {
                 <span className="text-sm font-medium text-[#386E65]">{stats.currentPeriod.label}</span>
                 <span className="text-xs bg-[#386E65] text-white px-2 py-0.5 rounded-full">Current</span>
               </div>
-              <p className="text-xs text-gray-500 mb-2">{stats.currentPeriod.start} to {stats.currentPeriod.end}</p>
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-end mt-2">
                 <span className="text-xs text-gray-500">{stats.currentPeriod.count} certificates</span>
                 <span className="text-lg font-bold text-[#386E65]">${stats.currentPeriod.cost}</span>
               </div>
@@ -200,8 +234,7 @@ export default function CostsPage() {
             {/* Previous periods */}
             {stats.previousPeriods.map((period, i) => (
               <div key={i} className="bg-white rounded-lg shadow p-4">
-                <p className="text-sm font-medium text-gray-700 mb-1">{period.label}</p>
-                <p className="text-xs text-gray-500 mb-2">{period.start} to {period.end}</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">{period.label}</p>
                 <div className="flex justify-between items-end">
                   <span className="text-xs text-gray-500">{period.count} certificates</span>
                   <span className="text-base font-semibold text-gray-800">${period.cost}</span>
@@ -216,7 +249,7 @@ export default function CostsPage() {
       {view === "daily" && (
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h3 className="text-sm font-semibold text-gray-600 mb-4">
-            Daily Breakdown - {stats.currentPeriod.label}
+            Daily Breakdown — Current Period
           </h3>
           {stats.daily.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-8">No certificates in this period yet</p>
@@ -280,8 +313,7 @@ export default function CostsPage() {
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
           <strong>How it works:</strong> Each health certificate generated includes a QR code costing
-          <strong> ${stats.qrPrice.toFixed(2)}</strong> per unit. Billing is calculated in 15-day cycles:
-          the 1st to the 15th, and the 16th to the end of each month.
+          <strong> ${stats.qrPrice.toFixed(2)}</strong> per unit. Billing runs monthly from the 4th to the 3rd of the following month. <strong>Payment is due on the 4th of every month</strong> and is mandatory to maintain service.
         </p>
       </div>
     </div>
