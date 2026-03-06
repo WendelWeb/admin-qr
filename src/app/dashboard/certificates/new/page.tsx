@@ -52,6 +52,7 @@ export default function NewCertificatePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
+  const [billingExpired, setBillingExpired] = useState(false);
   const [physicians, setPhysicians] = useState<StaffMember[]>([]);
   const [officers, setOfficers] = useState<StaffMember[]>([]);
 
@@ -76,10 +77,12 @@ export default function NewCertificatePage() {
       fetch("/api/physicians").then((r) => r.json()),
       fetch("/api/medical-officers").then((r) => r.json()),
       fetch("/api/credits").then((r) => r.json()),
-    ]).then(([p, o, c]) => {
+      fetch("/api/billing").then((r) => r.json()),
+    ]).then(([p, o, c, b]) => {
       setPhysicians(p);
       setOfficers(o);
       if (typeof c.credits === "number") setCredits(c.credits);
+      setBillingExpired(!!b.isExpired);
     });
   }, []);
 
@@ -160,8 +163,32 @@ export default function NewCertificatePage() {
         Fill in the details below. Certificate number, access code, and QR code will be generated automatically.
       </p>
 
+      {/* Service suspended block */}
+      {billingExpired && (
+        <div className="max-w-2xl mb-6">
+          <div className="bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-red-800 mb-2">Service Suspended</h3>
+            <p className="text-sm text-red-600 mb-3">
+              The monthly service payment has not been confirmed. Certificate generation is temporarily disabled until payment is processed.
+            </p>
+            <p className="text-xs text-red-500">
+              Please contact the super administrator to confirm payment and restore service.
+            </p>
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-red-100 rounded-lg">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-sm font-medium text-red-700">Payment overdue</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Insufficient credits block */}
-      {credits !== null && credits <= 0 && (
+      {!billingExpired && credits !== null && credits <= 0 && (
         <div className="max-w-2xl mb-6">
           <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
@@ -181,7 +208,7 @@ export default function NewCertificatePage() {
         </div>
       )}
 
-      <div className={`bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl ${credits !== null && credits <= 0 ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl ${billingExpired || (credits !== null && credits <= 0) ? "opacity-50 pointer-events-none" : ""}`}>
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Full Name */}

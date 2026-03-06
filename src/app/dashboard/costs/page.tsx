@@ -48,8 +48,23 @@ export default function CostsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"daily" | "monthly" | "billing">("billing");
+  const [role, setRole] = useState("");
+  const [billingExpired, setBillingExpired] = useState(false);
+  const [billingPaidUntil, setBillingPaidUntil] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => { if (data.role) setRole(data.role); });
+
+    fetch("/api/billing")
+      .then((r) => r.json())
+      .then((data) => {
+        setBillingExpired(!!data.isExpired);
+        setBillingPaidUntil(data.billingPaidUntil);
+      });
+
     fetch("/api/certificates/stats")
       .then((r) => r.json())
       .then((data) => {
@@ -58,6 +73,18 @@ export default function CostsPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  async function handleConfirmPayment() {
+    if (!confirm("Confirm that the monthly payment has been received? This will reactivate certificate generation until the next billing date.")) return;
+    setConfirming(true);
+    const res = await fetch("/api/billing", { method: "POST" });
+    if (res.ok) {
+      const data = await res.json();
+      setBillingExpired(false);
+      setBillingPaidUntil(data.billingPaidUntil);
+    }
+    setConfirming(false);
+  }
 
   if (loading) {
     return (
@@ -114,6 +141,53 @@ export default function CostsPage() {
           </div>
         </div>
       </div>
+
+      {/* Service Status - Super Admin Control */}
+      {role === "super_admin" && (
+        <div className={`rounded-xl p-4 sm:p-5 mb-6 border ${
+          billingExpired
+            ? "bg-gradient-to-r from-red-50 to-rose-50 border-red-200"
+            : "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200"
+        }`}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                billingExpired ? "bg-red-100" : "bg-emerald-100"
+              }`}>
+                {billingExpired ? (
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <div>
+                <h3 className={`text-sm font-semibold ${billingExpired ? "text-red-800" : "text-emerald-800"}`}>
+                  {billingExpired ? "Service Suspended" : "Service Active"}
+                </h3>
+                <p className={`text-xs mt-0.5 ${billingExpired ? "text-red-600" : "text-emerald-600"}`}>
+                  {billingExpired
+                    ? "Payment has not been confirmed. Certificate generation is blocked for all admins."
+                    : `Paid until ${billingPaidUntil ? formatDateFull(billingPaidUntil) : "—"}`
+                  }
+                </p>
+              </div>
+            </div>
+            {billingExpired && (
+              <button
+                onClick={handleConfirmPayment}
+                disabled={confirming}
+                className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 shrink-0"
+              >
+                {confirming ? "Confirming..." : "Confirm Payment Received"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">

@@ -107,11 +107,11 @@ export async function GET() {
     .groupBy(sql`to_char(${certificates.createdAt}, 'YYYY-MM')`)
     .orderBy(sql`to_char(${certificates.createdAt}, 'YYYY-MM')`);
 
-  // Previous 5 billing periods
+  // Previous billing periods (only those with certificates)
   const previousPeriods = [];
   let tempDate = new Date(currentPeriod.start);
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 12; i++) {
     // Go to previous period (subtract 1 day from start to land in previous period)
     tempDate = new Date(tempDate.getTime() - msPerDay);
     const period = getBillingPeriod(tempDate);
@@ -126,15 +126,21 @@ export async function GET() {
         )
       );
 
-    previousPeriods.push({
-      start: formatDate(period.start),
-      end: formatDate(period.end),
-      label: formatPeriodLabel(period.start, period.end),
-      count: count.count,
-      cost: (count.count * qrPrice).toFixed(2),
-    });
+    // Only include periods that have certificates
+    if (count.count > 0) {
+      previousPeriods.push({
+        start: formatDate(period.start),
+        end: formatDate(period.end),
+        label: formatPeriodLabel(period.start, period.end),
+        count: count.count,
+        cost: (count.count * qrPrice).toFixed(2),
+      });
+    }
 
     tempDate = new Date(period.start);
+
+    // Stop after finding 5 periods with data
+    if (previousPeriods.length >= 5) break;
   }
 
   // Total all-time

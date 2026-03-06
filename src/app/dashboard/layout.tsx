@@ -9,23 +9,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [role, setRole] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
+  const [billingExpired, setBillingExpired] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  function refreshData() {
+    fetch("/api/credits")
+      .then((r) => r.json())
+      .then((data) => { if (typeof data.credits === "number") setCredits(data.credits); });
+
+    fetch("/api/billing")
+      .then((r) => r.json())
+      .then((data) => { setBillingExpired(!!data.isExpired); });
+  }
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => { if (data.role) setRole(data.role); });
 
-    fetch("/api/credits")
-      .then((r) => r.json())
-      .then((data) => { if (typeof data.credits === "number") setCredits(data.credits); });
+    refreshData();
   }, []);
 
-  // Refresh credits when navigating (e.g. after creating a certificate)
+  // Refresh on navigation
   useEffect(() => {
-    fetch("/api/credits")
-      .then((r) => r.json())
-      .then((data) => { if (typeof data.credits === "number") setCredits(data.credits); });
+    refreshData();
     setSidebarOpen(false);
   }, [pathname]);
 
@@ -62,8 +69,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </svg>
         </button>
         <h2 className="text-base font-bold">MHU Admin</h2>
-        {/* Credits badge - mobile */}
+        {/* Status badges - mobile */}
         <div className="flex items-center gap-1.5">
+          {billingExpired && (
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" title="Service suspended" />
+          )}
           {credits !== null && (
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
               credits === 0
@@ -110,9 +120,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
+        {/* Service status indicator */}
+        {billingExpired && (
+          <div className="mx-4 mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+              <span className="text-xs font-medium text-red-400">Service Suspended</span>
+            </div>
+            <p className="text-xs text-red-400/70 mt-1">Payment overdue</p>
+          </div>
+        )}
+
         {/* Credits indicator in sidebar */}
         {credits !== null && (
-          <div className="mx-4 mt-4 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+          <div className={`mx-4 ${billingExpired ? "mt-2" : "mt-4"} p-3 rounded-lg bg-gray-800/50 border border-gray-700`}>
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400 uppercase tracking-wide">Credits</span>
               <span className={`text-lg font-bold ${

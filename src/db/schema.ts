@@ -47,5 +47,6 @@ export const settings = pgTable("settings", {
   id: serial("id").primaryKey(),
   qrPrice: numeric("qr_price", { precision: 10, scale: 2 }).notNull().default("0.40"),
   credits: integer("credits").notNull().default(0),
+  billingPaidUntil: date("billing_paid_until"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -45,8 +45,15 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Check credits
+  // Check billing status
   const [config] = await db.select().from(settings).limit(1);
+  const today = new Date().toISOString().split("T")[0];
+  const billingPaidUntil = config?.billingPaidUntil ?? null;
+  if (!billingPaidUntil || billingPaidUntil < today) {
+    return NextResponse.json({ error: "Service suspended — monthly payment has not been confirmed. Please contact the super admin." }, { status: 403 });
+  }
+
+  // Check credits
   const currentCredits = config?.credits ?? 0;
   if (currentCredits <= 0) {
     return NextResponse.json({ error: "Insufficient credits. Please contact the super admin to add more credits." }, { status: 403 });
