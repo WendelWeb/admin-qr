@@ -164,6 +164,19 @@ export default function AnalyticsPage() {
   const [loaded, setLoaded] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Day/period detail drill-down
+  interface DrillCert {
+    id: number; name: string; certificateNumber: number;
+    country: string; examiningPhysician: string; medicalOfficer?: string;
+    dateIssued?: string; expiryDate: string;
+    createdBy: string | null; createdAt: string;
+  }
+  const [drillLabel, setDrillLabel] = useState("");
+  const [drillCerts, setDrillCerts] = useState<DrillCert[]>([]);
+  const [drillLoading, setDrillLoading] = useState(false);
+  const [drillOpen, setDrillOpen] = useState(false);
+  const drillRef = useRef<HTMLDivElement | null>(null);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     const p = new URLSearchParams();
@@ -209,12 +222,52 @@ export default function AnalyticsPage() {
 
   function handlePrint() { window.print(); }
 
+  async function drillInto(label: string, fromDate: string, toDate: string) {
+    setDrillLabel(label);
+    setDrillOpen(true);
+    setDrillLoading(true);
+    const p = new URLSearchParams();
+    p.set("from", fromDate);
+    p.set("to", toDate);
+    const res = await fetch(`/api/analytics/details?${p}`);
+    const certs = await res.json();
+    setDrillCerts(certs);
+    setDrillLoading(false);
+    setTimeout(() => drillRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  }
+
+  function drillDay(dateStr: string) {
+    drillInto(fmtDateFull(dateStr), dateStr, dateStr);
+  }
+
+  function drillWeek(weekStart: string) {
+    const end = new Date(weekStart + "T00:00:00");
+    end.setDate(end.getDate() + 6);
+    drillInto(`Week of ${fmtDateShort(weekStart)}`, weekStart, end.toISOString().split("T")[0]);
+  }
+
+  function drillMonth(monthStr: string) {
+    const [y, m] = monthStr.split("-");
+    const start = `${y}-${m}-01`;
+    const end = new Date(parseInt(y), parseInt(m), 0);
+    drillInto(fmtMonth(monthStr), start, end.toISOString().split("T")[0]);
+  }
+
   // Prepare chart data
   const chartData = chartView === "daily"
-    ? (data?.daily || []).map((d) => ({ label: fmtDateShort(d.date), count: d.count, cost: d.count * (data?.qrPrice || 0) }))
+    ? (data?.daily || []).map((d) => ({ label: fmtDateShort(d.date), raw: d.date, count: d.count, cost: d.count * (data?.qrPrice || 0) }))
     : chartView === "weekly"
-      ? (data?.weekly || []).map((w) => ({ label: fmtWeek(w.week), count: w.count, cost: w.count * (data?.qrPrice || 0) }))
-      : (data?.monthly || []).map((m) => ({ label: fmtMonth(m.month), count: m.count, cost: m.count * (data?.qrPrice || 0) }));
+      ? (data?.weekly || []).map((w) => ({ label: fmtWeek(w.week), raw: w.week, count: w.count, cost: w.count * (data?.qrPrice || 0) }))
+      : (data?.monthly || []).map((m) => ({ label: fmtMonth(m.month), raw: m.month, count: m.count, cost: m.count * (data?.qrPrice || 0) }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleChartClick(entry: any) {
+    if (!entry?.activePayload?.[0]?.payload?.raw) return;
+    const raw = entry.activePayload[0].payload.raw;
+    if (chartView === "daily") drillDay(raw);
+    else if (chartView === "weekly") drillWeek(raw);
+    else drillMonth(raw);
+  }
 
   const statusData = data ? [
     { name: "Active", value: data.activeCount },
@@ -290,7 +343,8 @@ export default function AnalyticsPage() {
               {week.map((day) => (
                 <div
                   key={day.date}
-                  className={`w-[11px] h-[11px] rounded-[2px] ${heatColor(day.count, heatmapMax)} transition-colors`}
+                  onClick={() => day.count > 0 && drillDay(day.date)}
+                  className={`w-[11px] h-[11px] rounded-[2px] ${heatColor(day.count, heatmapMax)} transition-colors ${day.count > 0 ? "cursor-pointer hover:ring-1 hover:ring-gray-400" : ""}`}
                   title={`${fmtDateFull(day.date)}: ${day.count} certificate${day.count !== 1 ? "s" : ""}`}
                 />
               ))}
@@ -490,17 +544,17 @@ export default function AnalyticsPage() {
           <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               {chartView === "daily" ? (
-                <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -15 }}>
+                <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -15 }} onClick={handleChartClick} style={{ cursor: "pointer" }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#9ca3af" }} interval="preserveStartEnd" />
                   <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} allowDecimals={false} />
                   <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "13px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
                     formatter={(value: number | undefined) => [value ?? 0, "Certificates"]}
-                    labelFormatter={(l) => `Date: ${l}`} />
-                  <Bar dataKey="count" fill="#386E65" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    labelFormatter={(l) => `${l} — click to view details`} />
+                  <Bar dataKey="count" fill="#386E65" radius={[4, 4, 0, 0]} maxBarSize={40} className="cursor-pointer" />
                 </BarChart>
               ) : (
-                <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -15 }}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -15 }} onClick={handleChartClick} style={{ cursor: "pointer" }}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#386E65" stopOpacity={0.2} />
@@ -580,9 +634,9 @@ export default function AnalyticsPage() {
             const count = calMap[dateStr] || 0;
             const isToday = dateStr === todayStr();
             return (
-              <div key={day} className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-colors ${
+              <div key={day} onClick={() => count > 0 && drillDay(dateStr)} className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-colors ${
                 isToday ? "ring-2 ring-[#386E65]" : ""
-              } ${heatColor(count, calMax)}`} title={`${fmtDateFull(dateStr)}: ${count} certificate${count !== 1 ? "s" : ""}`}>
+              } ${heatColor(count, calMax)} ${count > 0 ? "cursor-pointer hover:ring-2 hover:ring-gray-400" : ""}`} title={`${fmtDateFull(dateStr)}: ${count} certificate${count !== 1 ? "s" : ""} — click to view`}>
                 <span className={`font-medium ${count > 0 ? "text-gray-800" : "text-gray-400"}`}>{day}</span>
                 {count > 0 && <span className="text-[10px] font-bold text-emerald-800">{count}</span>}
               </div>
@@ -916,6 +970,108 @@ export default function AnalyticsPage() {
           </>
         )}
       </div>
+
+      {/* ─── DRILL-DOWN DETAIL PANEL ─── */}
+      {drillOpen && (
+        <div ref={drillRef} className={`bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6 ${animStyle} ${animClass}`}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-700">Certificates — {drillLabel}</h2>
+              <p className="text-xs text-gray-400 mt-0.5">{drillCerts.length} certificate{drillCerts.length !== 1 ? "s" : ""} found</p>
+            </div>
+            <button onClick={() => setDrillOpen(false)} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          {drillLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-5 h-5 border-2 border-[#386E65] border-t-transparent rounded-full animate-spin" />
+              <span className="ml-3 text-gray-500 text-sm">Loading certificates...</span>
+            </div>
+          ) : drillCerts.length === 0 ? (
+            <div className="text-gray-400 text-sm text-center py-8">No certificates found for this period</div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Name</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Cert #</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Country</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Physician</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Officer</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Created By</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Date Issued</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Expires</th>
+                      <th className="text-left py-2.5 px-3 font-medium text-gray-500 text-xs uppercase">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {drillCerts.map((c) => {
+                      const isExpired = c.expiryDate < todayStr();
+                      return (
+                        <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                          <td className="py-2.5 px-3 font-medium text-gray-800">{c.name}</td>
+                          <td className="py-2.5 px-3 text-gray-600 font-mono text-xs">{c.certificateNumber}</td>
+                          <td className="py-2.5 px-3 text-gray-600">{c.country}</td>
+                          <td className="py-2.5 px-3 text-gray-600">{c.examiningPhysician}</td>
+                          <td className="py-2.5 px-3 text-gray-600">{c.medicalOfficer || "—"}</td>
+                          <td className="py-2.5 px-3 text-gray-500 text-xs">{c.createdBy || "—"}</td>
+                          <td className="py-2.5 px-3 text-gray-500 text-xs">{c.dateIssued || "—"}</td>
+                          <td className="py-2.5 px-3 text-gray-500 text-xs">{c.expiryDate}</td>
+                          <td className="py-2.5 px-3">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${isExpired ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+                              {isExpired ? "Expired" : "Active"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-3">
+                {drillCerts.map((c) => {
+                  const isExpired = c.expiryDate < todayStr();
+                  return (
+                    <div key={c.id} className="border border-gray-100 rounded-lg p-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium text-gray-800 text-sm">{c.name}</p>
+                          <p className="text-xs text-gray-500 font-mono mt-0.5">#{c.certificateNumber}</p>
+                        </div>
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${isExpired ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+                          {isExpired ? "Expired" : "Active"}
+                        </span>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-500">
+                        <span>{c.country}</span>
+                        <span>{c.examiningPhysician}</span>
+                        <span>{c.createdBy || "Unknown"}</span>
+                        <span>Issued: {c.dateIssued || "—"}</span>
+                        <span>Expires: {c.expiryDate}</span>
+                        <span>Officer: {c.medicalOfficer || "—"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Summary */}
+              <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-4 text-xs text-gray-500">
+                <span><strong className="text-gray-700">{drillCerts.length}</strong> certificates</span>
+                <span>QR cost: <strong className="text-gray-700">${(drillCerts.length * (data?.qrPrice || 0.40)).toFixed(2)}</strong></span>
+                <span>Credits: <strong className="text-gray-700">{drillCerts.length}</strong></span>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* ─── FOOTER INFO ─── */}
       <div className={`bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl p-4 sm:p-5 ${animStyle} ${animClass}`} style={{ transitionDelay: "620ms" }}>
