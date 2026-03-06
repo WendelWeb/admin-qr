@@ -81,6 +81,8 @@ export default function NewCertificatePage() {
     ]).then(([p, o, c, b]) => {
       setPhysicians(p);
       setOfficers(o);
+      if (p.length === 1) setExaminingPhysician(p[0].name);
+      if (o.length === 1) setMedicalOfficer(o[0].name);
       if (typeof c.credits === "number") setCredits(c.credits);
       setBillingExpired(!!b.isExpired);
     });
@@ -350,7 +352,15 @@ export default function NewCertificatePage() {
           {/* Examining Physician */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Examining Physician *</label>
-            {physicians.length > 0 ? (
+            {physicians.length === 1 ? (
+              <input
+                type="text"
+                value={examiningPhysician}
+                readOnly
+                disabled
+                className={`${inputClass} bg-gray-100 text-gray-500 cursor-not-allowed`}
+              />
+            ) : physicians.length > 1 ? (
               <select
                 value={examiningPhysician}
                 onChange={(e) => setExaminingPhysician(e.target.value)}
@@ -373,7 +383,7 @@ export default function NewCertificatePage() {
               />
             )}
             <p className="text-xs text-gray-400 mt-1">
-              The doctor who performed the medical examination.
+              {physicians.length === 1 ? "Only one physician available — auto-selected." : "The doctor who performed the medical examination."}
               {physicians.length === 0 && " Add physicians in Staff Management to use a dropdown."}
             </p>
           </div>
@@ -381,7 +391,15 @@ export default function NewCertificatePage() {
           {/* Medical Officer */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Medical Officer *</label>
-            {officers.length > 0 ? (
+            {officers.length === 1 ? (
+              <input
+                type="text"
+                value={medicalOfficer}
+                readOnly
+                disabled
+                className={`${inputClass} bg-gray-100 text-gray-500 cursor-not-allowed`}
+              />
+            ) : officers.length > 1 ? (
               <select
                 value={medicalOfficer}
                 onChange={(e) => setMedicalOfficer(e.target.value)}
@@ -404,7 +422,7 @@ export default function NewCertificatePage() {
               />
             )}
             <p className="text-xs text-gray-400 mt-1">
-              The TCIG medical officer who verified the examination.
+              {officers.length === 1 ? "Only one officer available — auto-selected." : "The TCIG medical officer who verified the examination."}
               {officers.length === 0 && " Add officers in Staff Management to use a dropdown."}
             </p>
           </div>
