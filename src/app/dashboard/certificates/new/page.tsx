@@ -340,10 +340,11 @@ export default function NewCertificatePage() {
             <input
               type="text"
               value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className={inputClass}
+              readOnly
+              disabled
+              className={`${inputClass} bg-gray-100 text-gray-500 cursor-not-allowed`}
             />
-            <p className="text-xs text-gray-400 mt-1">Country of origin or residence.</p>
+            <p className="text-xs text-gray-400 mt-1">This field is fixed and cannot be modified.</p>
           </div>
 
           {/* Examining Physician */}
