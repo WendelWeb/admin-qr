@@ -13,6 +13,10 @@ export default function CreditsPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Set exact
+  const [setExactValue, setSetExactValue] = useState("");
+  const [showSetExact, setShowSetExact] = useState(false);
+
   useEffect(() => {
     Promise.all([
       fetch("/api/auth/me").then((r) => r.json()),
@@ -50,13 +54,65 @@ export default function CreditsPage() {
         setError(data.error || "Failed to add credits");
       } else {
         setCredits(data.credits);
-        setSuccess(`${num} credits added successfully! New balance: ${data.credits}`);
+        setSuccess(`+${num} credits added. New balance: ${data.credits}`);
         setAmount("");
       }
     } catch {
       setError("An error occurred. Please try again.");
     }
     setAdding(false);
+  }
+
+  async function handleReset() {
+    if (!confirm("Are you sure you want to reset credits to 0? This will block certificate creation until new credits are added.")) return;
+    setError("");
+    setSuccess("");
+
+    try {
+      const res = await fetch("/api/credits", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reset" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCredits(0);
+        setSuccess("Credits reset to 0.");
+      } else {
+        setError(data.error || "Failed to reset");
+      }
+    } catch {
+      setError("An error occurred.");
+    }
+  }
+
+  async function handleSetExact() {
+    const val = parseInt(setExactValue);
+    if (isNaN(val) || val < 0) {
+      setError("Please enter a valid number (0 or more).");
+      return;
+    }
+    setError("");
+    setSuccess("");
+
+    try {
+      const res = await fetch("/api/credits", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set", amount: val }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCredits(data.credits);
+        setSuccess(`Credits set to ${data.credits}.`);
+        setSetExactValue("");
+        setShowSetExact(false);
+      } else {
+        setError(data.error || "Failed to set credits");
+      }
+    } catch {
+      setError("An error occurred.");
+    }
   }
 
   const presets = [10, 25, 50, 100];
@@ -115,6 +171,55 @@ export default function CreditsPage() {
             <p className="text-xs text-gray-400 mt-2">
               Each certificate created uses 1 credit. When credits reach 0, admins will not be able to create new certificates until more credits are added.
             </p>
+
+            {/* Quick actions */}
+            <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-2">Quick Actions</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleReset}
+                  className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  Reset to 0
+                </button>
+                <button
+                  onClick={() => setShowSetExact(!showSetExact)}
+                  className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  Set exact amount
+                </button>
+              </div>
+
+              {showSetExact && (
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={setExactValue}
+                    onChange={(e) => setSetExactValue(e.target.value)}
+                    placeholder="Enter value"
+                    className="flex-1 min-w-0 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSetExact();
+                      if (e.key === "Escape") { setShowSetExact(false); setSetExactValue(""); }
+                    }}
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSetExact}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-[#386E65] rounded-lg hover:bg-[#2d5a53] transition-colors"
+                  >
+                    Set
+                  </button>
+                  <button
+                    onClick={() => { setShowSetExact(false); setSetExactValue(""); }}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
