@@ -156,9 +156,9 @@ function ChangeBadge({ change }: { change: number }) {
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [from, setFrom] = useState(() => { const d = getPresetDates("1d"); return d.from; });
-  const [to, setTo] = useState(todayStr());
-  const [activePreset, setActivePreset] = useState<PresetKey>("1d");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [activePreset, setActivePreset] = useState<PresetKey>("all");
   const [chartView, setChartView] = useState<"daily" | "weekly" | "monthly">("daily");
   const [exporting, setExporting] = useState(false);
   const [loaded, setLoaded] = useState(false);
