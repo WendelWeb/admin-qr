@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
 import { certificates } from "@/db/schema";
-import { gte, lte, and, desc } from "drizzle-orm";
+import { sql, and, desc } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   const session = await getSession();
@@ -34,8 +34,8 @@ export async function GET(req: NextRequest) {
     .from(certificates)
     .where(
       and(
-        gte(certificates.createdAt, new Date(from + "T00:00:00")),
-        lte(certificates.createdAt, new Date(to + "T23:59:59.999"))
+        sql`${certificates.createdAt}::date >= ${from}::date`,
+        sql`${certificates.createdAt}::date <= ${to}::date`
       )
     )
     .orderBy(desc(certificates.createdAt));

@@ -15,8 +15,8 @@ export async function GET(req: NextRequest) {
   const to = params.get("to");
 
   const conditions = [];
-  if (from) conditions.push(gte(certificates.createdAt, new Date(from + "T00:00:00")));
-  if (to) conditions.push(lte(certificates.createdAt, new Date(to + "T23:59:59.999")));
+  if (from) conditions.push(sql`${certificates.createdAt}::date >= ${from}::date`);
+  if (to) conditions.push(sql`${certificates.createdAt}::date <= ${to}::date`);
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const results = await db

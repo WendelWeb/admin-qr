@@ -44,10 +44,15 @@ function endOfDay(date: Date) {
 }
 
 async function countInRange(from: Date, to: Date) {
+  const fromStr = from.toISOString().split("T")[0];
+  const toStr = to.toISOString().split("T")[0];
   const [result] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(certificates)
-    .where(and(gte(certificates.createdAt, from), lte(certificates.createdAt, to)));
+    .where(and(
+      sql`${certificates.createdAt}::date >= ${fromStr}::date`,
+      sql`${certificates.createdAt}::date <= ${toStr}::date`
+    ));
   return result.count;
 }
 
@@ -64,10 +69,10 @@ export async function GET(req: NextRequest) {
   const [config] = await db.select().from(settings).limit(1);
   const qrPrice = parseFloat(config?.qrPrice ?? "0.40");
 
-  // Build date filter
+  // Build date filter using SQL date cast to avoid timezone issues
   const conditions = [];
-  if (from) conditions.push(gte(certificates.createdAt, new Date(from + "T00:00:00")));
-  if (to) conditions.push(lte(certificates.createdAt, new Date(to + "T23:59:59.999")));
+  if (from) conditions.push(sql`${certificates.createdAt}::date >= ${from}::date`);
+  if (to) conditions.push(sql`${certificates.createdAt}::date <= ${to}::date`);
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   // --- BASIC COUNTS ---
