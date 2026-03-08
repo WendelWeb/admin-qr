@@ -1,4 +1,4 @@
-import { pgTable, serial, text, date, timestamp, integer, numeric } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, date, timestamp, integer, numeric, boolean } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -49,5 +49,6 @@ export const settings = pgTable("settings", {
   qrPrice: numeric("qr_price", { precision: 10, scale: 2 }).notNull().default("0.40"),
   credits: integer("credits").notNull().default(0),
   billingPaidUntil: date("billing_paid_until"),
+  maintenanceMode: boolean("maintenance_mode").notNull().default(false),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -53,6 +53,7 @@ export default function NewCertificatePage() {
   const [error, setError] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
   const [billingExpired, setBillingExpired] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
   const [physicians, setPhysicians] = useState<StaffMember[]>([]);
   const [officers, setOfficers] = useState<StaffMember[]>([]);
 
@@ -85,6 +86,7 @@ export default function NewCertificatePage() {
       if (o.length === 1) setMedicalOfficer(o[0].name);
       if (typeof c.credits === "number") setCredits(c.credits);
       setBillingExpired(!!b.isExpired);
+      setMaintenance(!!b.maintenanceMode);
     });
   }, []);
 
@@ -165,8 +167,38 @@ export default function NewCertificatePage() {
         Fill in the details below. Certificate number, access code, and QR code will be generated automatically.
       </p>
 
+      {/* System maintenance block */}
+      {maintenance && (
+        <div className="max-w-2xl mb-6">
+          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border border-amber-200 rounded-xl p-6 sm:p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+              <svg className="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.42 15.17l-5.66-5.66a8 8 0 1111.31 0l-5.65 5.66zM12 9v2m0 4h.01" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-amber-800 mb-2">System Under Maintenance</h3>
+            <p className="text-sm text-amber-700 mb-3">
+              The certificate management system is currently undergoing scheduled maintenance. All certificate generation services have been temporarily suspended to ensure system integrity and data security during this process.
+            </p>
+            <p className="text-sm text-amber-600 mb-4">
+              Our infrastructure team is performing critical updates to improve system reliability and performance. This is a routine procedure that helps maintain the highest standards of service quality.
+            </p>
+            <div className="bg-amber-100/60 rounded-lg p-4 text-left mb-4">
+              <p className="text-xs text-amber-700 font-medium mb-2">Why does this happen?</p>
+              <p className="text-xs text-amber-600">
+                As a government-grade system handling sensitive health certification data, periodic maintenance is essential. This is why it is strongly recommended to invest in redundant server infrastructure — multiple servers ensure that if one node requires maintenance, the remaining nodes can continue serving requests without any service interruption. A multi-server architecture provides high availability, load balancing, and zero-downtime deployments.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 rounded-lg">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+              <span className="text-sm font-medium text-amber-700">Maintenance in progress</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Service suspended block */}
-      {billingExpired && (
+      {!maintenance && billingExpired && (
         <div className="max-w-2xl mb-6">
           <div className="bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
@@ -210,7 +242,7 @@ export default function NewCertificatePage() {
         </div>
       )}
 
-      <div className={`bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl ${billingExpired || (credits !== null && credits <= 0) ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl ${maintenance || billingExpired || (credits !== null && credits <= 0) ? "opacity-50 pointer-events-none" : ""}`}>
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Full Name */}

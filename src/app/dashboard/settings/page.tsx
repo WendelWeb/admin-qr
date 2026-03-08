@@ -17,6 +17,10 @@ export default function SettingsPage() {
   const [priceSuccess, setPriceSuccess] = useState("");
   const [priceLoading, setPriceLoading] = useState(false);
 
+  // Maintenance mode
+  const [maintenance, setMaintenance] = useState(false);
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+
   // Template settings
   const [templateName, setTemplateName] = useState<string | null>(null);
   const [templateUploading, setTemplateUploading] = useState(false);
@@ -31,11 +35,17 @@ export default function SettingsPage() {
         if (data.role) setRole(data.role);
       });
 
-    // Get current price
+    // Get current price + maintenance status
     fetch("/api/settings")
       .then((r) => r.json())
       .then((data) => {
         if (data.qrPrice) setQrPrice(data.qrPrice);
+      });
+
+    fetch("/api/billing")
+      .then((r) => r.json())
+      .then((data) => {
+        setMaintenance(!!data.maintenanceMode);
       });
 
     // Get current template
@@ -128,6 +138,24 @@ export default function SettingsPage() {
     } catch {
       setTemplateError("Failed to remove template.");
     }
+  }
+
+  async function handleMaintenanceToggle() {
+    setMaintenanceLoading(true);
+    try {
+      const res = await fetch("/api/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !maintenance }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMaintenance(data.maintenanceMode);
+      }
+    } catch {
+      // silently fail
+    }
+    setMaintenanceLoading(false);
   }
 
   async function handlePriceSubmit(e: React.FormEvent) {
@@ -257,6 +285,54 @@ export default function SettingsPage() {
           {templateError && <p className="text-red-600 text-sm mt-2">{templateError}</p>}
           {templateSuccess && <p className="text-green-600 text-sm mt-2">{templateSuccess}</p>}
         </div>
+
+        {/* Maintenance Mode - Super Admin Only */}
+        {role === "super_admin" && (
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold text-gray-700">System Maintenance</h2>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                maintenance
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-green-100 text-green-700"
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${maintenance ? "bg-amber-500 animate-pulse" : "bg-green-500"}`} />
+                {maintenance ? "Maintenance Active" : "System Online"}
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">Only visible to super admins</p>
+
+            <p className="text-sm text-gray-600 mb-4">
+              {maintenance
+                ? "The system is currently in maintenance mode. All certificate creation is suspended. Regular admins will see a maintenance notice when they access the system."
+                : "The system is operating normally. Toggle maintenance mode to temporarily suspend all certificate creation services."}
+            </p>
+
+            <button
+              onClick={handleMaintenanceToggle}
+              disabled={maintenanceLoading}
+              className={`px-6 py-2.5 rounded-md text-sm font-medium transition-colors disabled:opacity-50 ${
+                maintenance
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-amber-600 text-white hover:bg-amber-700"
+              }`}
+            >
+              {maintenanceLoading
+                ? "Updating..."
+                : maintenance
+                  ? "Disable Maintenance Mode"
+                  : "Enable Maintenance Mode"}
+            </button>
+
+            {maintenance && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-xs text-amber-700">
+                  While maintenance mode is active, no admin can create new certificates. The system will display a professional maintenance notice to all users.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* QR Price - Super Admin Only */}
         {role === "super_admin" && (

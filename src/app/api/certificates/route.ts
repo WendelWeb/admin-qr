@@ -45,8 +45,13 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Check billing status
+  // Check maintenance mode
   const [config] = await db.select().from(settings).limit(1);
+  if (config?.maintenanceMode) {
+    return NextResponse.json({ error: "System is currently undergoing scheduled maintenance. All services are temporarily unavailable. Please try again later." }, { status: 503 });
+  }
+
+  // Check billing status
   const today = new Date().toISOString().split("T")[0];
   const billingPaidUntil = config?.billingPaidUntil ?? null;
   if (!billingPaidUntil || billingPaidUntil < today) {

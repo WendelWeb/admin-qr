@@ -36,6 +36,7 @@ export async function GET() {
   return NextResponse.json({
     billingPaidUntil,
     isExpired,
+    maintenanceMode: config?.maintenanceMode ?? false,
     nextBillingDate: getNextBillingDate(),
   });
 }

@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [role, setRole] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
   const [billingExpired, setBillingExpired] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   function refreshData() {
@@ -19,7 +20,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     fetch("/api/billing")
       .then((r) => r.json())
-      .then((data) => { setBillingExpired(!!data.isExpired); });
+      .then((data) => { setBillingExpired(!!data.isExpired); setMaintenance(!!data.maintenanceMode); });
   }
 
   useEffect(() => {
@@ -72,7 +73,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <h2 className="text-base font-bold">MHU Admin</h2>
         {/* Status badges - mobile */}
         <div className="flex items-center gap-1.5">
-          {billingExpired && (
+          {maintenance && (
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" title="System maintenance" />
+          )}
+          {!maintenance && billingExpired && (
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" title="Service suspended" />
           )}
           {credits !== null && (
@@ -121,8 +125,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
 
+        {/* Maintenance mode indicator */}
+        {maintenance && (
+          <div className="mx-4 mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+              <span className="text-xs font-medium text-amber-400">System Maintenance</span>
+            </div>
+            <p className="text-xs text-amber-400/70 mt-1">Services temporarily unavailable</p>
+          </div>
+        )}
+
         {/* Service status indicator */}
-        {billingExpired && (
+        {!maintenance && billingExpired && (
           <div className="mx-4 mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
