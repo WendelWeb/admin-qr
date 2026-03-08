@@ -374,10 +374,21 @@ export async function GET(req: NextRequest) {
   };
 
   // --- PROJECTION ---
-  const daysIntoMonth = now.getDate();
+  // Find first certificate date this month to avoid diluting average with inactive days
+  const [firstCertThisMonth] = await db
+    .select({ date: sql<string>`MIN(${certificates.createdAt})::date::text` })
+    .from(certificates)
+    .where(sql`${certificates.createdAt}::date >= ${thisMonthStart.toISOString().split("T")[0]}::date`);
+
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const avgPerDay = daysIntoMonth > 0 ? thisMonthCount / daysIntoMonth : 0;
-  const projectedMonthTotal = Math.round(avgPerDay * daysInMonth);
+  let activeDays = now.getDate(); // fallback
+  if (firstCertThisMonth?.date) {
+    const firstDay = new Date(firstCertThisMonth.date + "T00:00:00");
+    activeDays = Math.max(1, Math.floor((now.getTime() - firstDay.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  }
+  const avgPerDay = activeDays > 0 ? thisMonthCount / activeDays : 0;
+  const daysRemaining = daysInMonth - now.getDate();
+  const projectedMonthTotal = thisMonthCount + Math.round(avgPerDay * daysRemaining);
   const projectedMonthCost = (projectedMonthTotal * qrPrice).toFixed(2);
   const trend = thisMonthCount > lastMonthCount ? "up" : thisMonthCount < lastMonthCount ? "down" : "stable";
 
@@ -385,7 +396,7 @@ export async function GET(req: NextRequest) {
     avgPerDay: Math.round(avgPerDay * 10) / 10,
     projectedMonthTotal,
     projectedMonthCost,
-    daysRemaining: daysInMonth - daysIntoMonth,
+    daysRemaining,
     trend,
   };
 
