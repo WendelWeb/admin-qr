@@ -201,7 +201,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main content */}
       <main className="flex-1 p-4 pt-[4.5rem] lg:pt-6 lg:p-6 lg:ml-64 overflow-auto min-w-0">
-        {children}
+        {maintenance && role !== "super_admin" ? (
+          <div className="fixed inset-0 lg:left-64 z-30 bg-gray-100 flex items-center justify-center p-4">
+            <div className="max-w-lg w-full text-center">
+              {/* Server down icon */}
+              <div className="mx-auto mb-6 w-20 h-20 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5.636 5.636a9 9 0 1012.728 0M12 3v6" />
+                </svg>
+              </div>
+
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">Server Unavailable</h1>
+              <p className="text-red-600 font-medium text-sm mb-4">CONNECTION_REFUSED - Primary server is not responding</p>
+
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-left mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-sm font-semibold text-gray-700">Status: Offline</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  The primary application server has experienced an unexpected failure and is currently unreachable. All services, including certificate generation, data retrieval, and system management, are temporarily unavailable.
+                </p>
+                <p className="text-sm text-gray-600">
+                  Our technical team has been automatically alerted and is working to restore service as quickly as possible. No data has been lost during this outage.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 text-left mb-6">
+                <p className="text-xs font-semibold text-blue-800 uppercase tracking-wide mb-2">Why does this happen?</p>
+                <p className="text-sm text-blue-700">
+                  This system currently operates on a single-server architecture. When that server goes down — whether for maintenance, hardware failure, or unexpected load — the entire platform becomes inaccessible.
+                </p>
+                <p className="text-sm text-blue-700 mt-2">
+                  This is why it is strongly recommended to invest in a <strong>multi-server infrastructure</strong>. With two or more redundant servers, if one node fails, traffic is automatically routed to the remaining healthy nodes — ensuring <strong>zero downtime</strong>, continuous availability, and uninterrupted service for all users.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 text-gray-400 text-xs">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>Attempting to reconnect...</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          children
+        )}
       </main>
     </div>
   );
