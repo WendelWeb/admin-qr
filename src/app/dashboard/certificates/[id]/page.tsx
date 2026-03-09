@@ -25,8 +25,10 @@ export default function CertificateDetailPage() {
   const [cert, setCert] = useState<Certificate | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [role, setRole] = useState("");
 
   useEffect(() => {
+    fetch("/api/auth/me").then((r) => r.json()).then((d) => { if (d.role) setRole(d.role); });
     async function load() {
       const res = await fetch(`/api/certificates/${params.id}`);
       if (res.ok) {
@@ -74,16 +76,18 @@ export default function CertificateDetailPage() {
         <h1 className="text-lg sm:text-2xl font-bold text-gray-800">
           Certificate #{cert.certificateNumber}
         </h1>
-        <button
-          onClick={async () => {
-            if (!confirm(`Delete certificate #${cert.certificateNumber} for "${cert.name}"?`)) return;
-            const res = await fetch(`/api/certificates/${cert.id}`, { method: "DELETE" });
-            if (res.ok) router.push("/dashboard");
-          }}
-          className="sm:ml-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm self-start"
-        >
-          Delete
-        </button>
+        {role === "super_admin" && (
+          <button
+            onClick={async () => {
+              if (!confirm(`Delete certificate #${cert.certificateNumber} for "${cert.name}"?`)) return;
+              const res = await fetch(`/api/certificates/${cert.id}`, { method: "DELETE" });
+              if (res.ok) router.push("/dashboard");
+            }}
+            className="sm:ml-auto px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm self-start"
+          >
+            Delete
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

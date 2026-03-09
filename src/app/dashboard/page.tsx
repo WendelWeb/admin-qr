@@ -21,8 +21,10 @@ export default function DashboardPage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState("");
 
   useEffect(() => {
+    fetch("/api/auth/me").then((r) => r.json()).then((d) => { if (d.role) setRole(d.role); });
     fetchCertificates();
   }, []);
 
@@ -136,12 +138,14 @@ export default function DashboardPage() {
                       >
                         View
                       </Link>
-                      <button
-                        onClick={() => handleDelete(cert.id, cert.name)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
+                      {role === "super_admin" && (
+                        <button
+                          onClick={() => handleDelete(cert.id, cert.name)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -184,12 +188,14 @@ export default function DashboardPage() {
                 >
                   View
                 </Link>
-                <button
-                  onClick={() => handleDelete(cert.id, cert.name)}
-                  className="text-sm text-red-600 font-medium"
-                >
-                  Delete
-                </button>
+                {role === "super_admin" && (
+                  <button
+                    onClick={() => handleDelete(cert.id, cert.name)}
+                    className="text-sm text-red-600 font-medium"
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))
