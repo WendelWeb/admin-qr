@@ -400,7 +400,6 @@ export default function SettingsPage() {
             </p>
             <ul className="text-sm text-gray-600 mb-4 space-y-1 ml-4 list-disc">
               <li>Expire the billing period immediately</li>
-              <li>Reset all credits to 0</li>
               <li>Block certificate creation for regular admins</li>
               <li>Display the full billing invoice to all admins</li>
             </ul>
@@ -416,13 +415,13 @@ export default function SettingsPage() {
 
             <button
               onClick={async () => {
-                if (!confirm("Simulate billing expiration? This will expire billing and reset credits to 0. Regular admins will be blocked from creating certificates.\n\nYou (super admin) will NOT be affected.")) return;
+                if (!confirm("Simulate billing expiration? This will expire the billing period. Regular admins will be blocked from creating certificates.\n\nCredits will not be affected. You (super admin) will NOT be affected.")) return;
                 setSimulating(true);
                 setSimSuccess("");
                 const res = await fetch("/api/billing", { method: "PATCH" });
                 if (res.ok) {
                   setBillingExpired(true);
-                  setSimSuccess("Billing expiration simulated successfully. Log in as a regular admin to see the blocked experience. Use 'Confirm Payment Received' in Operating Costs to restore service.");
+                  setSimSuccess("Billing expiration simulated. Log in as a regular admin to see the blocked experience. Use 'Confirm Payment Received' in Operating Costs to restore service.");
                 }
                 setSimulating(false);
               }}

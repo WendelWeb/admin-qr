@@ -53,14 +53,6 @@ export async function GET() {
   const today = new Date().toISOString().split("T")[0];
   const isExpired = !billingPaidUntil || billingPaidUntil <= today;
 
-  // Auto-reset credits to 0 when billing expires
-  if (isExpired && config && (config.credits ?? 0) > 0) {
-    await db
-      .update(settings)
-      .set({ credits: 0, updatedAt: new Date() })
-      .where(eq(settings.id, config.id));
-  }
-
   // Compute billing summary when expired
   let billingSummary = null;
   if (isExpired) {
@@ -149,7 +141,6 @@ export async function PATCH() {
       .update(settings)
       .set({
         billingPaidUntil: today,
-        credits: 0,
         updatedAt: new Date(),
       })
       .where(eq(settings.id, config.id));
@@ -158,7 +149,6 @@ export async function PATCH() {
   return NextResponse.json({
     success: true,
     billingPaidUntil: today,
-    credits: 0,
     isExpired: true,
   });
 }
