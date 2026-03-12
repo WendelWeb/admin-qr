@@ -432,10 +432,24 @@ export default function SettingsPage() {
             </button>
 
             {billingExpired && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                <p className="text-xs text-amber-700">
-                  Billing is currently expired. To restore service, go to <strong>Operating Costs</strong> and click <strong>&quot;Confirm Payment Received&quot;</strong>, then add credits in <strong>Credits</strong>.
-                </p>
+              <div className="mt-4 flex flex-col gap-3">
+                <button
+                  onClick={async () => {
+                    if (!confirm("End the simulation and restore billing to active?")) return;
+                    setSimulating(true);
+                    setSimSuccess("");
+                    const res = await fetch("/api/billing", { method: "POST" });
+                    if (res.ok) {
+                      setBillingExpired(false);
+                      setSimSuccess("Simulation ended. Billing restored to active.");
+                    }
+                    setSimulating(false);
+                  }}
+                  disabled={simulating}
+                  className="px-6 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {simulating ? "Restoring..." : "End Simulation — Restore Billing"}
+                </button>
               </div>
             )}
           </div>
