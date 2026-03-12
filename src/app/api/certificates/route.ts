@@ -45,22 +45,24 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Check maintenance mode
+  const isSuperAdmin = session.role === "super_admin";
+
+  // Check maintenance mode (super_admin bypasses)
   const [config] = await db.select().from(settings).limit(1);
-  if (config?.maintenanceMode) {
+  if (!isSuperAdmin && config?.maintenanceMode) {
     return NextResponse.json({ error: "System is currently undergoing scheduled maintenance. All services are temporarily unavailable. Please try again later." }, { status: 503 });
   }
 
-  // Check billing status
+  // Check billing status (super_admin bypasses)
   const today = new Date().toISOString().split("T")[0];
   const billingPaidUntil = config?.billingPaidUntil ?? null;
-  if (!billingPaidUntil || billingPaidUntil < today) {
+  if (!isSuperAdmin && (!billingPaidUntil || billingPaidUntil <= today)) {
     return NextResponse.json({ error: "Service suspended — monthly payment has not been confirmed. Please contact the super admin." }, { status: 403 });
   }
 
-  // Check credits
+  // Check credits (super_admin bypasses)
   const currentCredits = config?.credits ?? 0;
-  if (currentCredits <= 0) {
+  if (!isSuperAdmin && currentCredits <= 0) {
     return NextResponse.json({ error: "Insufficient credits. Additional credits must be purchased before new certificates can be created." }, { status: 403 });
   }
 

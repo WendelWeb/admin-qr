@@ -52,6 +52,10 @@ export default function CostsPage() {
   const [billingExpired, setBillingExpired] = useState(false);
   const [billingPaidUntil, setBillingPaidUntil] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [billingSummary, setBillingSummary] = useState<{
+    periodLabel: string; qrCertCount: number; qrUnitPrice: number;
+    qrTotal: string; docspringCost: string; vpsCost: string; grandTotal: string;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -63,6 +67,7 @@ export default function CostsPage() {
       .then((data) => {
         setBillingExpired(!!data.isExpired);
         setBillingPaidUntil(data.billingPaidUntil);
+        if (data.billingSummary) setBillingSummary(data.billingSummary);
       });
 
     fetch("/api/certificates/stats")
@@ -75,7 +80,15 @@ export default function CostsPage() {
   }, []);
 
   async function handleConfirmPayment() {
-    if (!confirm("Confirm that the monthly payment has been received? This will reactivate certificate generation until the next billing date.")) return;
+    const msg = billingSummary
+      ? `Confirm ALL of the following payments have been received?\n\n` +
+        `1. QR Code costs: $${billingSummary.qrTotal} (${billingSummary.qrCertCount} certificates)\n` +
+        `2. DocSpring PDF plan: $${billingSummary.docspringCost}\n` +
+        `3. VPS DarWeb server: $${billingSummary.vpsCost}\n` +
+        `\nGrand Total: $${billingSummary.grandTotal}\n\n` +
+        `This will reactivate service until the next billing date.`
+      : "Confirm that the monthly payment has been received? This will reactivate certificate generation until the next billing date.";
+    if (!confirm(msg)) return;
     setConfirming(true);
     const res = await fetch("/api/billing", { method: "POST" });
     if (res.ok) {
@@ -170,7 +183,7 @@ export default function CostsPage() {
                 </h3>
                 <p className={`text-xs mt-0.5 ${billingExpired ? "text-red-600" : "text-emerald-600"}`}>
                   {billingExpired
-                    ? "Payment has not been confirmed. Certificate generation is blocked for all admins."
+                    ? "Payment has not been confirmed. Certificate generation is blocked for all admins. Credits have been reset to 0."
                     : `Paid until ${billingPaidUntil ? formatDateFull(billingPaidUntil) : "—"}`
                   }
                 </p>
@@ -185,6 +198,92 @@ export default function CostsPage() {
                 {confirming ? "Confirming..." : "Confirm Payment Received"}
               </button>
             )}
+          </div>
+
+          {/* Cost breakdown when billing expired */}
+          {billingExpired && billingSummary && (
+            <div className="mt-4 bg-white rounded-lg border border-red-200 p-4 sm:p-5">
+              <h4 className="text-sm font-semibold text-gray-700 mb-1">Monthly Invoice — {billingSummary.periodLabel}</h4>
+              <p className="text-xs text-gray-400 mb-3">All amounts must be paid before reactivating service.</p>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div>
+                    <span className="text-sm text-gray-700">QR Code Generation</span>
+                    <span className="text-xs text-gray-400 ml-1">({billingSummary.qrCertCount} certs x ${billingSummary.qrUnitPrice.toFixed(2)})</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-800">${billingSummary.qrTotal}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div>
+                    <span className="text-sm text-gray-700">DocSpring PDF Plan</span>
+                    <span className="text-xs text-gray-400 ml-1">(monthly)</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-800">${billingSummary.docspringCost}</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <div>
+                    <span className="text-sm text-gray-700">VPS DarWeb Server</span>
+                    <span className="text-xs text-gray-400 ml-1">(monthly)</span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-800">${billingSummary.vpsCost}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-sm font-bold text-gray-900">Grand Total</span>
+                  <span className="text-lg font-bold text-red-700">${billingSummary.grandTotal}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Billing summary for regular admins when expired */}
+      {billingExpired && role !== "super_admin" && billingSummary && (
+        <div className="rounded-xl p-4 sm:p-5 mb-6 border bg-gradient-to-r from-red-50 to-rose-50 border-red-200">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+              <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-red-800">Service Suspended — Billing Cycle Due</h3>
+              <p className="text-xs text-red-600 mt-0.5">Certificate generation is blocked until all monthly payments are confirmed.</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg border border-red-200 p-4">
+            <h4 className="text-sm font-semibold text-gray-700 mb-1">Monthly Invoice — {billingSummary.periodLabel}</h4>
+            <div className="space-y-2 mt-3">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <div>
+                  <span className="text-sm text-gray-700">QR Code Generation</span>
+                  <span className="text-xs text-gray-400 ml-1">({billingSummary.qrCertCount} certs x ${billingSummary.qrUnitPrice.toFixed(2)})</span>
+                </div>
+                <span className="text-sm font-medium text-gray-800">${billingSummary.qrTotal}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <div>
+                  <span className="text-sm text-gray-700">DocSpring PDF Plan</span>
+                  <span className="text-xs text-gray-400 ml-1">(monthly)</span>
+                </div>
+                <span className="text-sm font-medium text-gray-800">${billingSummary.docspringCost}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <div>
+                  <span className="text-sm text-gray-700">VPS DarWeb Server</span>
+                  <span className="text-xs text-gray-400 ml-1">(monthly)</span>
+                </div>
+                <span className="text-sm font-medium text-gray-800">${billingSummary.vpsCost}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <span className="text-sm font-bold text-gray-900">Grand Total</span>
+                <span className="text-lg font-bold text-red-700">${billingSummary.grandTotal}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-xs text-red-600">Awaiting payment confirmation from super admin</span>
           </div>
         </div>
       )}

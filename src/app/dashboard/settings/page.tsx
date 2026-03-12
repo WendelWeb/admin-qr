@@ -27,6 +27,11 @@ export default function SettingsPage() {
   const [templateError, setTemplateError] = useState("");
   const [templateSuccess, setTemplateSuccess] = useState("");
 
+  // Billing simulation
+  const [simulating, setSimulating] = useState(false);
+  const [simSuccess, setSimSuccess] = useState("");
+  const [billingExpired, setBillingExpired] = useState(false);
+
   useEffect(() => {
     // Get current user role
     fetch("/api/auth/me")
@@ -46,6 +51,7 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((data) => {
         setMaintenance(!!data.maintenanceMode);
+        setBillingExpired(!!data.isExpired);
       });
 
     // Get current template
@@ -370,6 +376,69 @@ export default function SettingsPage() {
                 {priceLoading ? "Saving..." : "Update Price"}
               </button>
             </form>
+          </div>
+        )}
+
+        {/* Billing Simulation - Super Admin Only */}
+        {role === "super_admin" && (
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 border-l-4 border-indigo-500">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold text-gray-700">Billing Simulation</h2>
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                billingExpired
+                  ? "bg-red-100 text-red-700"
+                  : "bg-green-100 text-green-700"
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${billingExpired ? "bg-red-500 animate-pulse" : "bg-green-500"}`} />
+                {billingExpired ? "Billing Expired" : "Billing Active"}
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 mb-4">Testing tool — only visible to super admins</p>
+
+            <p className="text-sm text-gray-600 mb-4">
+              Simulate what happens when the 4th of the month arrives. This will:
+            </p>
+            <ul className="text-sm text-gray-600 mb-4 space-y-1 ml-4 list-disc">
+              <li>Expire the billing period immediately</li>
+              <li>Reset all credits to 0</li>
+              <li>Block certificate creation for regular admins</li>
+              <li>Display the full billing invoice to all admins</li>
+            </ul>
+            <p className="text-xs text-indigo-600 mb-4 font-medium">
+              Your super admin account will not be affected — you can still create certificates and access all features.
+            </p>
+
+            {simSuccess && (
+              <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-md">
+                <p className="text-sm text-indigo-700">{simSuccess}</p>
+              </div>
+            )}
+
+            <button
+              onClick={async () => {
+                if (!confirm("Simulate billing expiration? This will expire billing and reset credits to 0. Regular admins will be blocked from creating certificates.\n\nYou (super admin) will NOT be affected.")) return;
+                setSimulating(true);
+                setSimSuccess("");
+                const res = await fetch("/api/billing", { method: "PATCH" });
+                if (res.ok) {
+                  setBillingExpired(true);
+                  setSimSuccess("Billing expiration simulated successfully. Log in as a regular admin to see the blocked experience. Use 'Confirm Payment Received' in Operating Costs to restore service.");
+                }
+                setSimulating(false);
+              }}
+              disabled={simulating || billingExpired}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              {simulating ? "Simulating..." : billingExpired ? "Billing Already Expired" : "Simulate \"The 4th Has Arrived\""}
+            </button>
+
+            {billingExpired && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-xs text-amber-700">
+                  Billing is currently expired. To restore service, go to <strong>Operating Costs</strong> and click <strong>&quot;Confirm Payment Received&quot;</strong>, then add credits in <strong>Credits</strong>.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

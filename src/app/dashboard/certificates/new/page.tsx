@@ -53,6 +53,11 @@ export default function NewCertificatePage() {
   const [error, setError] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
   const [billingExpired, setBillingExpired] = useState(false);
+  const [billingSummary, setBillingSummary] = useState<{
+    periodLabel: string; qrCertCount: number; qrUnitPrice: number;
+    qrTotal: string; docspringCost: string; vpsCost: string; grandTotal: string;
+  } | null>(null);
+  const [role, setRole] = useState("");
   const [physicians, setPhysicians] = useState<StaffMember[]>([]);
   const [officers, setOfficers] = useState<StaffMember[]>([]);
 
@@ -78,13 +83,16 @@ export default function NewCertificatePage() {
       fetch("/api/medical-officers").then((r) => r.json()),
       fetch("/api/credits").then((r) => r.json()),
       fetch("/api/billing").then((r) => r.json()),
-    ]).then(([p, o, c, b]) => {
+      fetch("/api/auth/me").then((r) => r.json()),
+    ]).then(([p, o, c, b, me]) => {
       setPhysicians(p);
       setOfficers(o);
       if (p.length === 1) setExaminingPhysician(p[0].name);
       if (o.length === 1) setMedicalOfficer(o[0].name);
       if (typeof c.credits === "number") setCredits(c.credits);
       setBillingExpired(!!b.isExpired);
+      if (b.billingSummary) setBillingSummary(b.billingSummary);
+      if (me.role) setRole(me.role);
     });
   }, []);
 
@@ -165,32 +173,69 @@ export default function NewCertificatePage() {
         Fill in the details below. Certificate number, access code, and QR code will be generated automatically.
       </p>
 
-      {/* Service suspended block */}
-      {billingExpired && (
+      {/* Service suspended block (not shown to super_admin) */}
+      {billingExpired && role && role !== "super_admin" && (
         <div className="max-w-2xl mb-6">
-          <div className="bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-              </svg>
+          <div className="bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-red-800 mb-2">Service Suspended — Billing Cycle Due</h3>
+              <p className="text-sm text-red-600 mb-4">
+                The monthly billing cycle has expired. All certificate generation is disabled until the super administrator confirms that all payments have been received.
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Service Suspended</h3>
-            <p className="text-sm text-red-600 mb-3">
-              The monthly service payment has not been confirmed. Certificate generation is temporarily disabled until payment is processed.
-            </p>
-            <p className="text-xs text-red-500">
-              Please contact the super administrator to confirm payment and restore service.
-            </p>
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-red-100 rounded-lg">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-sm font-medium text-red-700">Payment overdue</span>
+
+            {/* Billing cost breakdown */}
+            {billingSummary && (
+              <div className="bg-white rounded-lg border border-red-200 p-4 sm:p-5 mt-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-1">Monthly Invoice Summary</h4>
+                <p className="text-xs text-gray-400 mb-3">{billingSummary.periodLabel}</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div>
+                      <span className="text-sm text-gray-700">QR Code Generation</span>
+                      <span className="text-xs text-gray-400 ml-1">({billingSummary.qrCertCount} certs x ${billingSummary.qrUnitPrice.toFixed(2)})</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-800">${billingSummary.qrTotal}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div>
+                      <span className="text-sm text-gray-700">DocSpring PDF Plan</span>
+                      <span className="text-xs text-gray-400 ml-1">(monthly)</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-800">${billingSummary.docspringCost}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div>
+                      <span className="text-sm text-gray-700">VPS DarWeb Server</span>
+                      <span className="text-xs text-gray-400 ml-1">(monthly)</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-800">${billingSummary.vpsCost}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-sm font-bold text-gray-900">Grand Total</span>
+                    <span className="text-lg font-bold text-red-700">${billingSummary.grandTotal}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="text-center mt-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 rounded-lg">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-sm font-medium text-red-700">Awaiting payment confirmation from super admin</span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Insufficient credits block */}
-      {!billingExpired && credits !== null && credits <= 0 && (
+      {/* Insufficient credits block (not shown to super_admin) */}
+      {!billingExpired && role !== "super_admin" && credits !== null && credits <= 0 && (
         <div className="max-w-2xl mb-6">
           <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
@@ -210,7 +255,7 @@ export default function NewCertificatePage() {
         </div>
       )}
 
-      <div className={`bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl ${billingExpired || (credits !== null && credits <= 0) ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl ${role !== "super_admin" && (billingExpired || (credits !== null && credits <= 0)) ? "opacity-50 pointer-events-none" : ""}`}>
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Full Name */}
