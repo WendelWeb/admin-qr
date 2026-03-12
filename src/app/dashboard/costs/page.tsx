@@ -237,53 +237,23 @@ export default function CostsPage() {
         </div>
       )}
 
-      {/* Billing summary for regular admins when expired */}
-      {billingExpired && role !== "super_admin" && billingSummary && (
+      {/* Service suspended notice for regular admins when expired */}
+      {billingExpired && role !== "super_admin" && (
         <div className="rounded-xl p-4 sm:p-5 mb-6 border bg-gradient-to-r from-red-50 to-rose-50 border-red-200">
-          <div className="flex items-start gap-3 mb-4">
+          <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
               <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-red-800">Service Suspended — Billing Cycle Due</h3>
-              <p className="text-xs text-red-600 mt-0.5">Certificate generation is blocked until all monthly payments are confirmed.</p>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg border border-red-200 p-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-1">Monthly Invoice — {billingSummary.periodLabel}</h4>
-            <div className="space-y-2 mt-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <div>
-                  <span className="text-sm text-gray-700">QR Code Generation</span>
-                  <span className="text-xs text-gray-400 ml-1">({billingSummary.qrCertCount} certs x ${billingSummary.qrUnitPrice.toFixed(2)})</span>
-                </div>
-                <span className="text-sm font-medium text-gray-800">${billingSummary.qrTotal}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <div>
-                  <span className="text-sm text-gray-700">DocSpring PDF Plan</span>
-                  <span className="text-xs text-gray-400 ml-1">(monthly)</span>
-                </div>
-                <span className="text-sm font-medium text-gray-800">${billingSummary.docspringCost}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                <div>
-                  <span className="text-sm text-gray-700">VPS DarWeb Server</span>
-                  <span className="text-xs text-gray-400 ml-1">(monthly)</span>
-                </div>
-                <span className="text-sm font-medium text-gray-800">${billingSummary.vpsCost}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-sm font-bold text-gray-900">Grand Total</span>
-                <span className="text-lg font-bold text-red-700">${billingSummary.grandTotal}</span>
+              <h3 className="text-sm font-semibold text-red-800">Service Temporarily Suspended</h3>
+              <p className="text-xs text-red-600 mt-0.5">Certificate generation is currently on hold pending verification of all outstanding service payments. Please ensure that all monthly obligations are settled to restore full access.</p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-xs text-red-600">Service will resume once all payments are verified</span>
               </div>
             </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-xs text-red-600">Awaiting payment confirmation from super admin</span>
           </div>
         </div>
       )}

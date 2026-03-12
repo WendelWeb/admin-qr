@@ -53,10 +53,6 @@ export default function NewCertificatePage() {
   const [error, setError] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
   const [billingExpired, setBillingExpired] = useState(false);
-  const [billingSummary, setBillingSummary] = useState<{
-    periodLabel: string; qrCertCount: number; qrUnitPrice: number;
-    qrTotal: string; docspringCost: string; vpsCost: string; grandTotal: string;
-  } | null>(null);
   const [role, setRole] = useState("");
   const [physicians, setPhysicians] = useState<StaffMember[]>([]);
   const [officers, setOfficers] = useState<StaffMember[]>([]);
@@ -91,7 +87,6 @@ export default function NewCertificatePage() {
       if (o.length === 1) setMedicalOfficer(o[0].name);
       if (typeof c.credits === "number") setCredits(c.credits);
       setBillingExpired(!!b.isExpired);
-      if (b.billingSummary) setBillingSummary(b.billingSummary);
       if (me.role) setRole(me.role);
     });
   }, []);
@@ -183,51 +178,13 @@ export default function NewCertificatePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-red-800 mb-2">Service Suspended — Billing Cycle Due</h3>
+              <h3 className="text-lg font-semibold text-red-800 mb-2">Service Temporarily Suspended</h3>
               <p className="text-sm text-red-600 mb-4">
-                The monthly billing cycle has expired. All certificate generation is disabled until the super administrator confirms that all payments have been received.
+                Certificate generation is currently on hold pending verification of all outstanding service payments. Please ensure that all monthly obligations are settled to restore full access.
               </p>
-            </div>
-
-            {/* Billing cost breakdown */}
-            {billingSummary && (
-              <div className="bg-white rounded-lg border border-red-200 p-4 sm:p-5 mt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-1">Monthly Invoice Summary</h4>
-                <p className="text-xs text-gray-400 mb-3">{billingSummary.periodLabel}</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <div>
-                      <span className="text-sm text-gray-700">QR Code Generation</span>
-                      <span className="text-xs text-gray-400 ml-1">({billingSummary.qrCertCount} certs x ${billingSummary.qrUnitPrice.toFixed(2)})</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-800">${billingSummary.qrTotal}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <div>
-                      <span className="text-sm text-gray-700">DocSpring PDF Plan</span>
-                      <span className="text-xs text-gray-400 ml-1">(monthly)</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-800">${billingSummary.docspringCost}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <div>
-                      <span className="text-sm text-gray-700">VPS DarWeb Server</span>
-                      <span className="text-xs text-gray-400 ml-1">(monthly)</span>
-                    </div>
-                    <span className="text-sm font-medium text-gray-800">${billingSummary.vpsCost}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2">
-                    <span className="text-sm font-bold text-gray-900">Grand Total</span>
-                    <span className="text-lg font-bold text-red-700">${billingSummary.grandTotal}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="text-center mt-4">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 rounded-lg">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-sm font-medium text-red-700">Awaiting payment confirmation from super admin</span>
+                <span className="text-sm font-medium text-red-700">Service will resume once all payments are verified</span>
               </div>
             </div>
           </div>
