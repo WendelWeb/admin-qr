@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { certificates, settings } from "@/db/schema";
-import { desc, or, ilike, sql, eq } from "drizzle-orm";
+import { desc, or, ilike, sql, eq, and, isNull } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { generateAccessCode } from "@/lib/generate-access-code";
 import { generateQrCode } from "@/lib/generate-qr-code";
@@ -18,16 +18,19 @@ export async function GET(req: NextRequest) {
       .select()
       .from(certificates)
       .where(
-        or(
-          ilike(certificates.name, `%${search}%`),
-          ilike(certificates.accessCode, `%${search}%`),
-          ilike(certificates.country, `%${search}%`),
-          ilike(certificates.examiningPhysician, `%${search}%`),
-          ilike(certificates.medicalOfficer, `%${search}%`),
-          sql`CAST(${certificates.certificateNumber} AS TEXT) ILIKE ${`%${search}%`}`,
-          sql`CAST(${certificates.dateOfBirth} AS TEXT) ILIKE ${`%${search}%`}`,
-          sql`CAST(${certificates.dateIssued} AS TEXT) ILIKE ${`%${search}%`}`,
-          sql`CAST(${certificates.expiryDate} AS TEXT) ILIKE ${`%${search}%`}`
+        and(
+          isNull(certificates.deletedAt),
+          or(
+            ilike(certificates.name, `%${search}%`),
+            ilike(certificates.accessCode, `%${search}%`),
+            ilike(certificates.country, `%${search}%`),
+            ilike(certificates.examiningPhysician, `%${search}%`),
+            ilike(certificates.medicalOfficer, `%${search}%`),
+            sql`CAST(${certificates.certificateNumber} AS TEXT) ILIKE ${`%${search}%`}`,
+            sql`CAST(${certificates.dateOfBirth} AS TEXT) ILIKE ${`%${search}%`}`,
+            sql`CAST(${certificates.dateIssued} AS TEXT) ILIKE ${`%${search}%`}`,
+            sql`CAST(${certificates.expiryDate} AS TEXT) ILIKE ${`%${search}%`}`
+          )
         )
       )
       .orderBy(desc(certificates.createdAt));
@@ -35,6 +38,7 @@ export async function GET(req: NextRequest) {
     results = await db
       .select()
       .from(certificates)
+      .where(isNull(certificates.deletedAt))
       .orderBy(desc(certificates.createdAt));
   }
 

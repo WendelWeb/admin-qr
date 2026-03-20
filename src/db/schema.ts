@@ -22,6 +22,8 @@ export const certificates = pgTable("certificates", {
   qrCode: text("qr_code"),
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+  deletedBy: text("deleted_by"),
 });
 
 export const physicians = pgTable("physicians", {

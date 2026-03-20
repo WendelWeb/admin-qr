@@ -55,6 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (role === "super_admin") {
     navItems.push({ href: "/dashboard/credits", label: "Credits", icon: "🎫" });
     navItems.push({ href: "/dashboard/admins", label: "Admin Management", icon: "🔐" });
+    navItems.push({ href: "/dashboard/deleted-certificates", label: "Deleted Certificates", icon: "🗑️" });
   }
 
   // Total blackout for non-super-admin during maintenance

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { certificates } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 
 export async function GET(
@@ -15,7 +15,7 @@ export async function GET(
   const [cert] = await db
     .select()
     .from(certificates)
-    .where(eq(certificates.id, parseInt(id)));
+    .where(and(eq(certificates.id, parseInt(id)), isNull(certificates.deletedAt)));
 
   if (!cert) {
     return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
@@ -30,15 +30,18 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "super_admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
-  const [deleted] = await db
-    .delete(certificates)
-    .where(eq(certificates.id, parseInt(id)))
+  const [updated] = await db
+    .update(certificates)
+    .set({
+      deletedAt: new Date(),
+      deletedBy: (session.email as string) || null,
+    })
+    .where(and(eq(certificates.id, parseInt(id)), isNull(certificates.deletedAt)))
     .returning();
 
-  if (!deleted) {
+  if (!updated) {
     return NextResponse.json({ error: "Certificate not found" }, { status: 404 });
   }
 

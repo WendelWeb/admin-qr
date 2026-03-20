@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-interface Certificate {
+interface DeletedCertificate {
   id: number;
   name: string;
   certificateNumber: number;
@@ -14,27 +14,40 @@ interface Certificate {
   country: string;
   examiningPhysician: string;
   medicalOfficer: string;
+  createdBy: string;
   createdAt: string;
+  deletedAt: string;
+  deletedBy: string;
 }
 
-export default function DashboardPage() {
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
+export default function DeletedCertificatesPage() {
+  const router = useRouter();
+  const [certificates, setCertificates] = useState<DeletedCertificate[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState("");
 
   useEffect(() => {
-    fetch("/api/auth/me").then((r) => r.json()).then((d) => { if (d.role) setRole(d.role); });
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.role !== "super_admin") {
+          router.push("/dashboard");
+          return;
+        }
+        setRole(d.role);
+      });
     fetchCertificates();
-  }, []);
+  }, [router]);
 
   async function fetchCertificates(query = "") {
     setLoading(true);
-    const url = query ? `/api/certificates?search=${encodeURIComponent(query)}` : "/api/certificates";
+    const url = query
+      ? `/api/certificates/deleted?search=${encodeURIComponent(query)}`
+      : "/api/certificates/deleted";
     const res = await fetch(url);
     if (res.ok) {
-      const data = await res.json();
-      setCertificates(data);
+      setCertificates(await res.json());
     }
     setLoading(false);
   }
@@ -44,30 +57,33 @@ export default function DashboardPage() {
     fetchCertificates(search);
   }
 
-  async function handleDelete(id: number, name: string) {
-    if (!confirm(`Are you sure you want to delete the certificate for "${name}"?`)) return;
-
-    const res = await fetch(`/api/certificates/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setCertificates(certificates.filter((c) => c.id !== id));
-    }
-  }
-
   function formatDate(dateStr: string) {
     const d = new Date(dateStr + "T00:00:00");
     return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   }
 
+  function formatDateTime(dateStr: string) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  }
+
+  if (role !== "super_admin") return null;
+
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Certificates</h1>
-        <Link
-          href="/dashboard/certificates/new"
-          className="px-4 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm text-center"
-        >
-          + New Certificate
-        </Link>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Deleted Certificates</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Certificates deleted by admins — still counted for billing
+          </p>
+        </div>
+        <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+          {certificates.length} deleted
+        </span>
       </div>
 
       {/* Search */}
@@ -77,7 +93,7 @@ export default function DashboardPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, certificate #, access code..."
+            placeholder="Search by name, cert #, deleted by..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
           />
           <div className="flex gap-2">
@@ -107,10 +123,10 @@ export default function DashboardPage() {
             <tr>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Cert #</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Access Code</th>
               <th className="text-left px-4 py-3 text-gray-600 font-medium">Date Issued</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Expiry</th>
-              <th className="text-left px-4 py-3 text-gray-600 font-medium">Actions</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Created By</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Deleted By</th>
+              <th className="text-left px-4 py-3 text-gray-600 font-medium">Deleted At</th>
             </tr>
           </thead>
           <tbody>
@@ -120,32 +136,21 @@ export default function DashboardPage() {
               </tr>
             ) : certificates.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-8 text-gray-500">No certificates found</td>
+                <td colSpan={6} className="text-center py-8 text-gray-500">No deleted certificates</td>
               </tr>
             ) : (
               certificates.map((cert) => (
                 <tr key={cert.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono">{cert.certificateNumber}</td>
                   <td className="px-4 py-3">{cert.name}</td>
-                  <td className="px-4 py-3 font-mono">{cert.accessCode}</td>
                   <td className="px-4 py-3">{formatDate(cert.dateIssued)}</td>
-                  <td className="px-4 py-3">{formatDate(cert.expiryDate)}</td>
+                  <td className="px-4 py-3 text-gray-500">{cert.createdBy || "—"}</td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-3">
-                      <Link
-                        href={`/dashboard/certificates/${cert.id}`}
-                        className="text-[#386E65] hover:underline"
-                      >
-                        View
-                      </Link>
-                      <button
-                          onClick={() => handleDelete(cert.id, cert.name)}
-                          className="text-red-600 hover:underline"
-                        >
-                          Delete
-                        </button>
-                    </div>
+                    <span className="px-2 py-0.5 bg-red-50 text-red-700 rounded text-xs font-medium">
+                      {cert.deletedBy || "—"}
+                    </span>
                   </td>
+                  <td className="px-4 py-3 text-gray-500">{formatDateTime(cert.deletedAt)}</td>
                 </tr>
               ))
             )}
@@ -158,7 +163,7 @@ export default function DashboardPage() {
         {loading ? (
           <div className="text-center py-8 text-gray-500">Loading...</div>
         ) : certificates.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No certificates found</div>
+          <div className="text-center py-8 text-gray-500">No deleted certificates</div>
         ) : (
           certificates.map((cert) => (
             <div key={cert.id} className="bg-white rounded-lg shadow p-4">
@@ -167,33 +172,21 @@ export default function DashboardPage() {
                   <p className="font-medium text-gray-800">{cert.name}</p>
                   <p className="text-xs font-mono text-gray-500">#{cert.certificateNumber}</p>
                 </div>
-                <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">
-                  {cert.accessCode}
+                <span className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded font-medium">
+                  Deleted
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-3">
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-2">
                 <div>
                   <span className="text-gray-400">Issued:</span> {formatDate(cert.dateIssued)}
                 </div>
                 <div>
-                  <span className="text-gray-400">Expiry:</span> {formatDate(cert.expiryDate)}
+                  <span className="text-gray-400">Created by:</span> {cert.createdBy || "—"}
                 </div>
               </div>
-              <div className="flex gap-3 pt-2 border-t border-gray-100">
-                <Link
-                  href={`/dashboard/certificates/${cert.id}`}
-                  className="text-sm text-[#386E65] font-medium"
-                >
-                  View
-                </Link>
-                {role === "super_admin" && (
-                  <button
-                    onClick={() => handleDelete(cert.id, cert.name)}
-                    className="text-sm text-red-600 font-medium"
-                  >
-                    Delete
-                  </button>
-                )}
+              <div className="pt-2 border-t border-gray-100 text-xs text-gray-500">
+                <span className="text-red-600 font-medium">Deleted by {cert.deletedBy || "—"}</span>
+                {" "}on {formatDateTime(cert.deletedAt)}
               </div>
             </div>
           ))

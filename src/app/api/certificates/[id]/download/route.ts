@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/db";
 import { certificates } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 
 const DOCSPRING_TOKEN_ID = "api_Jx72Zxtk6dMyYZ739H";
 const DOCSPRING_TOKEN_SECRET = "9tKdzcmS4qctmatMD2AT3MmHTr59X4qNNxXGQbmxeb";
@@ -40,7 +40,7 @@ export async function GET(
   const [cert] = await db
     .select()
     .from(certificates)
-    .where(eq(certificates.id, parseInt(id)));
+    .where(and(eq(certificates.id, parseInt(id)), isNull(certificates.deletedAt)));
 
   if (!cert) {
     return NextResponse.json({ error: "Certificate not found" }, { status: 404 });

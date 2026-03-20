@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { certificates } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 
 export async function GET(
   req: NextRequest,
@@ -17,7 +17,7 @@ export async function GET(
   const [cert] = await db
     .select({ qrCode: certificates.qrCode })
     .from(certificates)
-    .where(eq(certificates.certificateNumber, num));
+    .where(and(eq(certificates.certificateNumber, num), isNull(certificates.deletedAt)));
 
   if (!cert || !cert.qrCode) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
