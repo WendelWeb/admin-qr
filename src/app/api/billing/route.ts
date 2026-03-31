@@ -4,19 +4,43 @@ import { db } from "@/db";
 import { settings, certificates } from "@/db/schema";
 import { eq, sql, gte, lte, and } from "drizzle-orm";
 
+// Internal billing day (actual trigger) vs display day (shown in UI)
+const BILLING_DAY = 2;
+const PERIOD_END_DAY = 1;
+const DISPLAY_BILLING_DAY = 4;
+const DISPLAY_PERIOD_END_DAY = 3;
+
 function getNextBillingDate() {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
   const day = now.getDate();
 
-  if (day >= 4) {
-    const next = new Date(year, month + 1, 4);
-    return next.toISOString().split("T")[0];
+  if (day >= BILLING_DAY) {
+    return new Date(year, month + 1, BILLING_DAY).toISOString().split("T")[0];
   } else {
-    const next = new Date(year, month, 4);
-    return next.toISOString().split("T")[0];
+    return new Date(year, month, BILLING_DAY).toISOString().split("T")[0];
   }
+}
+
+function getNextBillingDateDisplay() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+
+  if (day >= BILLING_DAY) {
+    return new Date(year, month + 1, DISPLAY_BILLING_DAY).toISOString().split("T")[0];
+  } else {
+    return new Date(year, month, DISPLAY_BILLING_DAY).toISOString().split("T")[0];
+  }
+}
+
+function toDisplayDate(internalDate: string | null): string | null {
+  if (!internalDate) return null;
+  const d = new Date(internalDate + "T00:00:00");
+  d.setDate(d.getDate() + (DISPLAY_BILLING_DAY - BILLING_DAY));
+  return d.toISOString().split("T")[0];
 }
 
 // Get the billing period that just ended (previous period)
@@ -26,17 +50,19 @@ function getLastBillingPeriod() {
   const month = now.getMonth();
   const day = now.getDate();
 
-  if (day >= 4) {
-    // We are past the 4th — last period: 4th of previous month to 3rd of this month
+  if (day >= BILLING_DAY) {
     return {
-      start: new Date(year, month - 1, 4),
-      end: new Date(year, month, 3, 23, 59, 59, 999),
+      start: new Date(year, month - 1, BILLING_DAY),
+      end: new Date(year, month, PERIOD_END_DAY, 23, 59, 59, 999),
+      displayStart: new Date(year, month - 1, DISPLAY_BILLING_DAY),
+      displayEnd: new Date(year, month, DISPLAY_PERIOD_END_DAY, 23, 59, 59, 999),
     };
   } else {
-    // Before the 4th — last period: 4th of two months ago to 3rd of last month
     return {
-      start: new Date(year, month - 2, 4),
-      end: new Date(year, month - 1, 3, 23, 59, 59, 999),
+      start: new Date(year, month - 2, BILLING_DAY),
+      end: new Date(year, month - 1, PERIOD_END_DAY, 23, 59, 59, 999),
+      displayStart: new Date(year, month - 2, DISPLAY_BILLING_DAY),
+      displayEnd: new Date(year, month - 1, DISPLAY_PERIOD_END_DAY, 23, 59, 59, 999),
     };
   }
 }
@@ -75,14 +101,13 @@ export async function GET() {
     const vpsCost = "399.00";
     const grandTotal = (qrCertCount * qrPrice + 249 + 399).toFixed(2);
 
-    const formatD = (d: Date) => d.toISOString().split("T")[0];
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const periodLabel = `${months[lastPeriod.start.getMonth()]} ${lastPeriod.start.getDate()}, ${lastPeriod.start.getFullYear()} — ${months[lastPeriod.end.getMonth()]} ${lastPeriod.end.getDate()}, ${lastPeriod.end.getFullYear()}`;
+    const periodLabel = `${months[lastPeriod.displayStart.getMonth()]} ${lastPeriod.displayStart.getDate()}, ${lastPeriod.displayStart.getFullYear()} — ${months[lastPeriod.displayEnd.getMonth()]} ${lastPeriod.displayEnd.getDate()}, ${lastPeriod.displayEnd.getFullYear()}`;
 
     billingSummary = {
       periodLabel,
-      periodStart: formatD(lastPeriod.start),
-      periodEnd: formatD(lastPeriod.end),
+      periodStart: lastPeriod.displayStart.toISOString().split("T")[0],
+      periodEnd: lastPeriod.displayEnd.toISOString().split("T")[0],
       qrCertCount,
       qrUnitPrice: qrPrice,
       qrTotal,
@@ -93,10 +118,10 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    billingPaidUntil,
+    billingPaidUntil: toDisplayDate(billingPaidUntil),
     isExpired,
     maintenanceMode: config?.maintenanceMode ?? false,
-    nextBillingDate: getNextBillingDate(),
+    nextBillingDate: getNextBillingDateDisplay(),
     billingSummary,
   });
 }
@@ -121,7 +146,7 @@ export async function POST() {
   }
 
   return NextResponse.json({
-    billingPaidUntil: nextDate,
+    billingPaidUntil: toDisplayDate(nextDate),
     isExpired: false,
   });
 }
@@ -148,7 +173,7 @@ export async function PATCH() {
 
   return NextResponse.json({
     success: true,
-    billingPaidUntil: today,
+    billingPaidUntil: toDisplayDate(today),
     isExpired: true,
   });
 }

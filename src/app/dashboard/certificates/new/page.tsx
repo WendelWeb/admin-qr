@@ -168,51 +168,7 @@ export default function NewCertificatePage() {
         Fill in the details below. Certificate number, access code, and QR code will be generated automatically.
       </p>
 
-      {/* Service suspended block (not shown to super_admin) */}
-      {billingExpired && role && role !== "super_admin" && (
-        <div className="max-w-2xl mb-6">
-          <div className="bg-gradient-to-br from-red-50 via-rose-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-red-800 mb-2">Service Temporarily Suspended</h3>
-              <p className="text-sm text-red-600 mb-4">
-                Certificate generation is currently on hold pending verification of all outstanding service payments. Please ensure that all monthly obligations are settled to restore full access.
-              </p>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 rounded-lg">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-sm font-medium text-red-700">Service will resume once all payments are verified</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Insufficient credits block (not shown to super_admin) */}
-      {!billingExpired && role !== "super_admin" && credits !== null && credits <= 0 && (
-        <div className="max-w-2xl mb-6">
-          <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-xl p-6 sm:p-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Insufficient Credits</h3>
-            <p className="text-sm text-red-600 mb-4">
-              There are no credits remaining to create new certificates. Additional credits must be purchased before certificate generation can resume. Each credit allows the creation of one certificate.
-            </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 rounded-lg">
-              <span className="text-2xl font-bold text-red-500">0</span>
-              <span className="text-sm text-red-600">credits available</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className={`bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl ${role !== "super_admin" && (billingExpired || (credits !== null && credits <= 0)) ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Full Name */}

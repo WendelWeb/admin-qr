@@ -5,7 +5,9 @@
       "Bash(npx next:*)",
       "Bash(grep -r \"qr\\\\|QR\\\\|scan\" '/c/Users/stanl/Desktop/Personal Projects/QRPROJECT' --include=*.ts --include=*.tsx --include=*.json)",
       "Bash(xargs grep:*)",
-      "Bash(grep -r \"certificate\\\\|Certificate\" '/c/Users/stanl/Desktop/Personal Projects/admin-health' --include=*.ts --include=*.tsx --include=*.js --include=*.jsx)"
+      "Bash(grep -r \"certificate\\\\|Certificate\" '/c/Users/stanl/Desktop/Personal Projects/admin-health' --include=*.ts --include=*.tsx --include=*.js --include=*.jsx)",
+      "Bash(find 'C:\\\\Users\\\\stanl\\\\Desktop\\\\Personal Projects\\\\admin-health\\\\src' -type f -name *.tsx -o -name *.ts)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

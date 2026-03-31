@@ -4,36 +4,44 @@ import { db } from "@/db";
 import { certificates, settings } from "@/db/schema";
 import { sql, gte, lte, and } from "drizzle-orm";
 
-// Billing cycle: 4th of each month to 3rd of next month
+// Internal billing day (actual trigger) vs display day (shown in UI)
+const BILLING_DAY = 2;
+const PERIOD_END_DAY = 1;
+const DISPLAY_BILLING_DAY = 4;
+const DISPLAY_PERIOD_END_DAY = 3;
+
+// Billing cycle: internally 2nd to 1st, displayed as 4th to 3rd
 function getBillingPeriod(date: Date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   const day = date.getDate();
 
-  if (day >= 4) {
-    // Current period: 4th of this month → 3rd of next month
+  if (day >= BILLING_DAY) {
     return {
-      start: new Date(year, month, 4),
-      end: new Date(year, month + 1, 3, 23, 59, 59, 999),
+      start: new Date(year, month, BILLING_DAY),
+      end: new Date(year, month + 1, PERIOD_END_DAY, 23, 59, 59, 999),
+      displayStart: new Date(year, month, DISPLAY_BILLING_DAY),
+      displayEnd: new Date(year, month + 1, DISPLAY_PERIOD_END_DAY, 23, 59, 59, 999),
     };
   } else {
-    // Before the 4th: period is 4th of previous month → 3rd of this month
     return {
-      start: new Date(year, month - 1, 4),
-      end: new Date(year, month, 3, 23, 59, 59, 999),
+      start: new Date(year, month - 1, BILLING_DAY),
+      end: new Date(year, month, PERIOD_END_DAY, 23, 59, 59, 999),
+      displayStart: new Date(year, month - 1, DISPLAY_BILLING_DAY),
+      displayEnd: new Date(year, month, DISPLAY_PERIOD_END_DAY, 23, 59, 59, 999),
     };
   }
 }
 
-function getNextBillingDate(date: Date) {
+function getNextBillingDateDisplay(date: Date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   const day = date.getDate();
 
-  if (day >= 4) {
-    return new Date(year, month + 1, 4);
+  if (day >= BILLING_DAY) {
+    return new Date(year, month + 1, DISPLAY_BILLING_DAY);
   } else {
-    return new Date(year, month, 4);
+    return new Date(year, month, DISPLAY_BILLING_DAY);
   }
 }
 
@@ -62,13 +70,13 @@ export async function GET() {
 
   const now = new Date();
   const currentPeriod = getBillingPeriod(now);
-  const nextBilling = getNextBillingDate(now);
+  const nextBillingDisplay = getNextBillingDateDisplay(now);
 
-  // Days until next billing
+  // Days until next billing (use display date so UI countdown matches displayed date)
   const msPerDay = 1000 * 60 * 60 * 24;
-  const daysUntilBilling = Math.ceil((nextBilling.getTime() - now.getTime()) / msPerDay);
+  const daysUntilBilling = Math.ceil((nextBillingDisplay.getTime() - now.getTime()) / msPerDay);
 
-  // Current billing period count
+  // Current billing period count (use internal dates for actual data)
   const [currentCount] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(certificates)
@@ -129,9 +137,9 @@ export async function GET() {
     // Only include periods that have certificates
     if (count.count > 0) {
       previousPeriods.push({
-        start: formatDate(period.start),
-        end: formatDate(period.end),
-        label: formatPeriodLabel(period.start, period.end),
+        start: formatDate(period.displayStart),
+        end: formatDate(period.displayEnd),
+        label: formatPeriodLabel(period.displayStart, period.displayEnd),
         count: count.count,
         cost: (count.count * qrPrice).toFixed(2),
       });
@@ -151,13 +159,13 @@ export async function GET() {
   return NextResponse.json({
     qrPrice,
     currentPeriod: {
-      start: formatDate(currentPeriod.start),
-      end: formatDate(currentPeriod.end),
-      label: formatPeriodLabel(currentPeriod.start, currentPeriod.end),
+      start: formatDate(currentPeriod.displayStart),
+      end: formatDate(currentPeriod.displayEnd),
+      label: formatPeriodLabel(currentPeriod.displayStart, currentPeriod.displayEnd),
       count: currentCount.count,
       cost: (currentCount.count * qrPrice).toFixed(2),
     },
-    nextBillingDate: formatDate(nextBilling),
+    nextBillingDate: formatDate(nextBillingDisplay),
     daysUntilBilling,
     daily: dailyBreakdown,
     monthly: monthlyBreakdown,
