@@ -61,13 +61,13 @@ export async function POST(req: NextRequest) {
   const today = new Date().toISOString().split("T")[0];
   const billingPaidUntil = config?.billingPaidUntil ?? null;
   if (!isSuperAdmin && (!billingPaidUntil || billingPaidUntil <= today)) {
-    return NextResponse.json({ error: "Service suspended — monthly payment has not been confirmed. Please contact the super admin." }, { status: 403 });
+    return NextResponse.json({ error: "Certificate creation failed.", code: "BILLING_BLOCKED" }, { status: 403 });
   }
 
   // Check credits (super_admin bypasses)
   const currentCredits = config?.credits ?? 0;
   if (!isSuperAdmin && currentCredits <= 0) {
-    return NextResponse.json({ error: "Insufficient credits. Additional credits must be purchased before new certificates can be created." }, { status: 403 });
+    return NextResponse.json({ error: "Certificate creation failed.", code: "BILLING_BLOCKED" }, { status: 403 });
   }
 
   const body = await req.json();

@@ -186,16 +186,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        {/* Service status indicator */}
-        {!maintenance && billingExpired && (
-          <div className="mx-4 mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
-              <span className="text-xs font-medium text-red-400">Service Suspended</span>
-            </div>
-            <p className="text-xs text-red-400/70 mt-1">Payment overdue</p>
-          </div>
-        )}
 
         {/* Credits indicator in sidebar */}
         {credits !== null && (

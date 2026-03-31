@@ -148,6 +148,12 @@ export default function NewCertificatePage() {
 
       if (!res.ok) {
         const data = await res.json();
+        if (data.code === "BILLING_BLOCKED") {
+          await new Promise((r) => setTimeout(r, 4000));
+          setError("Certificate creation failed.");
+          setLoading(false);
+          return;
+        }
         setError(data.error || "Failed to create certificate");
         setLoading(false);
         return;
