@@ -8,6 +8,8 @@ interface StaffMember {
   name: string;
 }
 
+type CertSystem = "legacy" | "new";
+
 const MONTHS = [
   { value: "01", label: "January" },
   { value: "02", label: "February" },
@@ -49,16 +51,17 @@ const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-md focus:out
 
 export default function NewCertificatePage() {
   const router = useRouter();
+  const [system, setSystem] = useState<CertSystem | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [credits, setCredits] = useState<number | null>(null);
-  const [billingExpired, setBillingExpired] = useState(false);
-  const [role, setRole] = useState("");
+  const [, setCredits] = useState<number | null>(null);
+  const [, setBillingExpired] = useState(false);
+  const [, setRole] = useState("");
   const [physicians, setPhysicians] = useState<StaffMember[]>([]);
   const [officers, setOfficers] = useState<StaffMember[]>([]);
 
   const [name, setName] = useState("");
-  const [country, setCountry] = useState("Turks and Caicos Islands");
+  const [country] = useState("Turks and Caicos Islands");
   const [examiningPhysician, setExaminingPhysician] = useState("");
   const [medicalOfficer, setMedicalOfficer] = useState("");
   const [validityYears, setValidityYears] = useState("2");
@@ -167,9 +170,291 @@ export default function NewCertificatePage() {
     }
   }
 
+  // ─────────────────────────────────────────────────────────
+  // STEP 1 — System Selector
+  // ─────────────────────────────────────────────────────────
+  if (system === null) {
+    return (
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">New Certificate</h1>
+        <p className="text-sm text-gray-500 mb-6">
+          Choose which certificate system you want to use. Both options issue a fully valid certificate.
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 max-w-5xl">
+          {/* ─── LEGACY CARD ─── */}
+          <button
+            type="button"
+            onClick={() => setSystem("legacy")}
+            className="group relative text-left bg-white rounded-2xl border border-gray-200 hover:border-[#386E65] hover:shadow-xl transition-all duration-300 overflow-hidden"
+          >
+            <div className="absolute top-4 right-4 px-2.5 py-1 bg-[#386E65]/10 text-[#386E65] text-[11px] font-semibold rounded-full uppercase tracking-wide">
+              Currently Active
+            </div>
+
+            <div className="p-6 sm:p-7">
+              <div className="w-12 h-12 rounded-xl bg-[#386E65]/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-[#386E65]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Classic System</h3>
+              <p className="text-sm text-gray-500 mb-5">
+                The original certificate format you already know — proven, fast, and battle-tested.
+              </p>
+
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-start gap-2 text-sm text-gray-700">
+                  <svg className="w-4 h-4 text-[#386E65] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Familiar layout, identical to the certificates you issue today
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-700">
+                  <svg className="w-4 h-4 text-[#386E65] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Auto-generated certificate number, access code, and QR
+                </li>
+                <li className="flex items-start gap-2 text-sm text-gray-700">
+                  <svg className="w-4 h-4 text-[#386E65] mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Instant generation — ready to download in seconds
+                </li>
+              </ul>
+
+              <div className="flex items-end justify-between pt-4 border-t border-gray-100">
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">$249</div>
+                  <div className="text-xs text-gray-400">per certificate</div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#386E65] group-hover:gap-2.5 transition-all">
+                  Use this system
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </button>
+
+          {/* ─── NEW CARD ─── */}
+          <button
+            type="button"
+            onClick={() => setSystem("new")}
+            className="group relative text-left bg-gradient-to-br from-[#386E65] to-[#1f4640] rounded-2xl text-white hover:shadow-2xl transition-all duration-300 overflow-hidden"
+          >
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/5 blur-2xl" />
+            <div className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full bg-white/5 blur-3xl" />
+
+            <div className="absolute top-4 right-4 px-2.5 py-1 bg-white/15 backdrop-blur-sm text-white text-[11px] font-semibold rounded-full uppercase tracking-wide flex items-center gap-1">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+              New
+            </div>
+
+            <div className="relative p-6 sm:p-7">
+              <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-4 ring-1 ring-white/20">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+
+              <h3 className="text-lg font-bold text-white mb-1">Premium System</h3>
+              <p className="text-sm text-white/70 mb-5">
+                Next-generation certificate engine — pixel-perfect templates, richer formatting, smarter delivery.
+              </p>
+
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-start gap-2 text-sm text-white/90">
+                  <svg className="w-4 h-4 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Powered by a professional document engine (DocSpring)
+                </li>
+                <li className="flex items-start gap-2 text-sm text-white/90">
+                  <svg className="w-4 h-4 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Crisp, refined typography and a modernized layout
+                </li>
+                <li className="flex items-start gap-2 text-sm text-white/90">
+                  <svg className="w-4 h-4 text-white mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Same workflow you already know — zero learning curve
+                </li>
+              </ul>
+
+              <div className="flex items-end justify-between pt-4 border-t border-white/15">
+                <div>
+                  <div className="text-2xl font-bold text-white">$249</div>
+                  <div className="text-xs text-white/60">per certificate</div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white group-hover:gap-2.5 transition-all">
+                  Try the new system
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div className="mt-5 max-w-5xl flex items-start gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>
+            Both systems issue legally identical certificates and cost the same. Pick whichever fits your preference — you can switch on the next certificate.
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 2A — New (Premium) System: in preparation
+  // ─────────────────────────────────────────────────────────
+  if (system === "new") {
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={() => setSystem(null)}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#386E65] transition-colors mb-4"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Choose a different system
+        </button>
+
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Premium System</h1>
+        <p className="text-sm text-gray-500 mb-6">
+          The new certificate engine — almost ready to generate your first document.
+        </p>
+
+        <div className="relative max-w-3xl bg-gradient-to-br from-[#386E65] to-[#1f4640] rounded-2xl text-white overflow-hidden shadow-xl">
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/5 blur-3xl" />
+          <div className="absolute -bottom-32 -left-24 w-80 h-80 rounded-full bg-white/5 blur-3xl" />
+
+          <div className="relative p-6 sm:p-10">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-sm ring-1 ring-white/20 flex items-center justify-center">
+                <svg className="w-7 h-7 text-white animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-widest text-white/60">Status</div>
+                <div className="text-lg font-bold">Final setup in progress</div>
+              </div>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-bold leading-tight mb-3">
+              We&apos;re putting the finishing touches on your premium template.
+            </h2>
+            <p className="text-white/75 text-sm sm:text-base leading-relaxed mb-8 max-w-2xl">
+              The new system uses a professional document engine to render your certificates with the
+              quality of a printed legal document. As soon as the master template ID is wired in, every
+              field on this page will produce a polished, ready-to-send PDF in seconds.
+            </p>
+
+            <div className="grid sm:grid-cols-3 gap-3 mb-8">
+              <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl p-4">
+                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center mb-2.5">
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <div className="text-sm font-semibold mb-0.5">Legally identical</div>
+                <div className="text-xs text-white/60">Same data, same validity, same QR verification.</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl p-4">
+                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center mb-2.5">
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                </div>
+                <div className="text-sm font-semibold mb-0.5">Beautifully rendered</div>
+                <div className="text-xs text-white/60">Pixel-perfect typography and layout, every time.</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl p-4">
+                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center mb-2.5">
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div className="text-sm font-semibold mb-0.5">Just as fast</div>
+                <div className="text-xs text-white/60">Generation in seconds — no extra steps for you.</div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6 border-t border-white/15">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-widest text-white/60 mb-1">Pricing</div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold">$249</span>
+                  <span className="text-sm text-white/60">per certificate</span>
+                </div>
+                <div className="text-xs text-white/50 mt-1">Identical to the classic system — no upcharge.</div>
+              </div>
+
+              <div className="flex flex-col sm:items-end gap-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-300/15 border border-amber-200/30 text-amber-100 text-xs font-medium rounded-full">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-300" />
+                  </span>
+                  Awaiting template ID
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSystem("legacy")}
+                  className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-white text-[#386E65] rounded-lg hover:bg-white/90 transition-colors text-sm font-semibold shadow-sm"
+                >
+                  Use Classic System for now
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-xs text-gray-400 mt-4 max-w-3xl">
+          You&apos;ll see the new option go live the moment the master template is registered. Nothing else changes — the form, the fields, and the price all stay the same.
+        </p>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // STEP 2B — Classic (Legacy) System: existing form
+  // ─────────────────────────────────────────────────────────
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">New Certificate</h1>
+      <button
+        type="button"
+        onClick={() => setSystem(null)}
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#386E65] transition-colors mb-4"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Choose a different system
+      </button>
+
+      <div className="flex items-center gap-2 mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">New Certificate</h1>
+        <span className="px-2 py-0.5 bg-[#386E65]/10 text-[#386E65] text-[10px] font-semibold rounded-full uppercase tracking-wide">
+          Classic System · $249
+        </span>
+      </div>
       <p className="text-sm text-gray-500 mb-6">
         Fill in the details below. Certificate number, access code, and QR code will be generated automatically.
       </p>
@@ -188,7 +473,7 @@ export default function NewCertificatePage() {
               className={inputClass}
               placeholder="e.g. Roudlyn Jean-Pierre"
             />
-            <p className="text-xs text-gray-400 mt-1">Enter the person's full legal name as it should appear on the certificate.</p>
+            <p className="text-xs text-gray-400 mt-1">Enter the person&apos;s full legal name as it should appear on the certificate.</p>
           </div>
 
           {/* Date of Birth */}
