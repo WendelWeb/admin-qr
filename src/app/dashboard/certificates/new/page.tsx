@@ -199,7 +199,7 @@ export default function NewCertificatePage() {
                 </svg>
               </div>
 
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Classic System</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Old System</h3>
               <p className="text-sm text-gray-500 mb-5">
                 The original certificate format you already know — proven, fast, and battle-tested.
               </p>
@@ -227,8 +227,8 @@ export default function NewCertificatePage() {
 
               <div className="flex items-end justify-between pt-4 border-t border-gray-100">
                 <div>
-                  <div className="text-2xl font-bold text-gray-900">$249</div>
-                  <div className="text-xs text-gray-400">per certificate</div>
+                  <div className="text-2xl font-bold text-gray-900">$249<span className="text-sm font-medium text-gray-500">/mo</span></div>
+                  <div className="text-xs text-gray-400">per month</div>
                 </div>
                 <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#386E65] group-hover:gap-2.5 transition-all">
                   Use this system
@@ -261,7 +261,7 @@ export default function NewCertificatePage() {
                 </svg>
               </div>
 
-              <h3 className="text-lg font-bold text-white mb-1">Premium System</h3>
+              <h3 className="text-lg font-bold text-white mb-1">New System</h3>
               <p className="text-sm text-white/70 mb-5">
                 Next-generation certificate engine — pixel-perfect templates, richer formatting, smarter delivery.
               </p>
@@ -289,8 +289,8 @@ export default function NewCertificatePage() {
 
               <div className="flex items-end justify-between pt-4 border-t border-white/15">
                 <div>
-                  <div className="text-2xl font-bold text-white">$249</div>
-                  <div className="text-xs text-white/60">per certificate</div>
+                  <div className="text-2xl font-bold text-white">$249<span className="text-sm font-medium text-white/70">/mo</span></div>
+                  <div className="text-xs text-white/60">per month</div>
                 </div>
                 <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-white group-hover:gap-2.5 transition-all">
                   Try the new system
@@ -308,7 +308,7 @@ export default function NewCertificatePage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span>
-            Both systems issue legally identical certificates and cost the same. Pick whichever fits your preference — you can switch on the next certificate.
+            Both systems issue legally identical certificates and bill the same flat $249/month. Pick whichever fits your preference — you can switch any time.
           </span>
         </div>
       </div>
@@ -332,7 +332,7 @@ export default function NewCertificatePage() {
           Choose a different system
         </button>
 
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Premium System</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">New System</h1>
         <p className="text-sm text-gray-500 mb-6">
           The new certificate engine — almost ready to generate your first document.
         </p>
@@ -398,9 +398,9 @@ export default function NewCertificatePage() {
                 <div className="text-[11px] font-semibold uppercase tracking-widest text-white/60 mb-1">Pricing</div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-bold">$249</span>
-                  <span className="text-sm text-white/60">per certificate</span>
+                  <span className="text-sm text-white/60">per month</span>
                 </div>
-                <div className="text-xs text-white/50 mt-1">Identical to the classic system — no upcharge.</div>
+                <div className="text-xs text-white/50 mt-1">Same flat rate as the Old System — no upcharge.</div>
               </div>
 
               <div className="flex flex-col sm:items-end gap-2">
@@ -416,7 +416,7 @@ export default function NewCertificatePage() {
                   onClick={() => setSystem("legacy")}
                   className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-white text-[#386E65] rounded-lg hover:bg-white/90 transition-colors text-sm font-semibold shadow-sm"
                 >
-                  Use Classic System for now
+                  Use Old System for now
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
@@ -452,7 +452,7 @@ export default function NewCertificatePage() {
       <div className="flex items-center gap-2 mb-2">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-800">New Certificate</h1>
         <span className="px-2 py-0.5 bg-[#386E65]/10 text-[#386E65] text-[10px] font-semibold rounded-full uppercase tracking-wide">
-          Classic System · $249
+          Old System · $249/mo
         </span>
       </div>
       <p className="text-sm text-gray-500 mb-6">
