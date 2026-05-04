@@ -147,9 +147,70 @@ export default function CreditsPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Credit Management</h1>
-        <p className="text-sm text-gray-500 mt-1">Track and adjust how many certificates remain in the issuing pool.</p>
+      {/* ─── HERO ─── */}
+      <div className={`relative rounded-3xl text-white overflow-hidden shadow-2xl mb-6 ${
+        credits === 0
+          ? "bg-gradient-to-br from-[#3a0f0f] via-[#5a1818] to-[#a83232]"
+          : "bg-gradient-to-br from-[#0e1c26] via-[#1a3530] to-[#386E65]"
+      }`}>
+        <div className={`absolute -top-32 -right-24 w-80 h-80 rounded-full blur-3xl pointer-events-none ${
+          credits === 0 ? "bg-red-400/20" : "bg-emerald-400/20"
+        }`} />
+        <div className={`absolute -bottom-40 -left-20 w-96 h-96 rounded-full blur-3xl pointer-events-none ${
+          credits === 0 ? "bg-rose-300/10" : "bg-teal-300/10"
+        }`} />
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
+        <div className="relative px-6 sm:px-10 pt-6 sm:pt-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm ring-1 ring-white/20 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+              </svg>
+            </div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">Dashboard · Credits</div>
+          </div>
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ring-1 ${
+            credits === 0
+              ? "bg-red-500/20 text-red-100 ring-red-300/30"
+              : "bg-emerald-400/20 text-emerald-100 ring-emerald-300/30"
+          }`}>
+            <span className="relative flex h-1.5 w-1.5">
+              {credits !== 0 && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75" />
+              )}
+              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${credits === 0 ? "bg-red-300" : "bg-emerald-300"}`} />
+            </span>
+            {credits === 0 ? "Blocked" : "Active"}
+          </div>
+        </div>
+
+        <div className="relative px-6 sm:px-10 py-8 sm:py-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-5">
+          <div>
+            <p className="text-sm text-white/60 uppercase tracking-widest font-medium mb-2">Current Balance</p>
+            <div className="flex items-baseline gap-3">
+              <span className={`text-6xl sm:text-7xl font-bold tabular-nums ${
+                credits === 0 ? "text-red-200" : "text-white"
+              }`}>
+                {credits}
+              </span>
+              <span className="text-sm text-white/60">
+                {credits === 1 ? "credit" : "credits"}
+              </span>
+            </div>
+            <p className="text-sm text-white/65 mt-2 max-w-md">
+              {credits === 0
+                ? "No credits remaining — certificate creation is blocked until you add more."
+                : "Each certificate created consumes one credit. Top up below to keep issuance flowing."}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

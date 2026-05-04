@@ -202,9 +202,81 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your account, security, and system-wide preferences.</p>
+      {/* ─── HERO ─── */}
+      <div className="relative bg-gradient-to-br from-[#0e1c26] via-[#1a3530] to-[#386E65] rounded-3xl text-white overflow-hidden shadow-2xl mb-6">
+        <div className="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full bg-teal-300/10 blur-3xl pointer-events-none" />
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
+        <div className="relative px-6 sm:px-10 pt-6 sm:pt-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm ring-1 ring-white/20 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">Dashboard · Settings</div>
+          </div>
+          {role && (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/10 text-white/90 ring-1 ring-white/20">
+              {role === "super_admin" ? "Super Admin" : "Admin"}
+            </div>
+          )}
+        </div>
+
+        <div className="relative px-6 sm:px-10 py-6 sm:py-8">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">Settings</h1>
+          <p className="text-sm sm:text-base text-white/65 mt-2 max-w-xl">
+            Manage your account, security, and system-wide preferences.
+          </p>
+        </div>
+
+        <div className="relative px-6 sm:px-10 pb-6 sm:pb-8 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-3 sm:p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-400/20 ring-1 ring-emerald-300/30 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-white/50">Template</div>
+              <div className="text-sm font-semibold text-white truncate">{templateName ? "Loaded" : "None"}</div>
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-3 sm:p-4 flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ring-1 ${
+              maintenance ? "bg-amber-400/20 ring-amber-300/30" : "bg-emerald-400/20 ring-emerald-300/30"
+            }`}>
+              <svg className={`w-5 h-5 ${maintenance ? "text-amber-200" : "text-emerald-200"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-white/50">System</div>
+              <div className="text-sm font-semibold text-white">{maintenance ? "Maintenance" : "Online"}</div>
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-3 sm:p-4 flex items-center gap-3 col-span-2 sm:col-span-1">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ring-1 ${
+              billingExpired ? "bg-red-500/20 ring-red-300/30" : "bg-emerald-400/20 ring-emerald-300/30"
+            }`}>
+              <svg className={`w-5 h-5 ${billingExpired ? "text-red-200" : "text-emerald-200"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-white/50">Billing</div>
+              <div className="text-sm font-semibold text-white">{billingExpired ? "Expired" : "Active"}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-5 max-w-2xl">

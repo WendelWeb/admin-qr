@@ -116,9 +116,75 @@ export default function CostsPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Operating Costs</h1>
-        <p className="text-sm text-gray-500 mt-1">Track usage, spending, and the next billing cycle.</p>
+      {/* ─── HERO ─── */}
+      <div className="relative bg-gradient-to-br from-[#0e1c26] via-[#1a3530] to-[#386E65] rounded-3xl text-white overflow-hidden shadow-2xl mb-6">
+        <div className="absolute -top-32 -right-24 w-80 h-80 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full bg-teal-300/10 blur-3xl pointer-events-none" />
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
+        <div className="relative px-6 sm:px-10 pt-6 sm:pt-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm ring-1 ring-white/20 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">Dashboard · Operating Costs</div>
+          </div>
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ring-1 ${
+            stats.daysUntilBilling <= 3
+              ? "bg-red-500/20 text-red-100 ring-red-300/30"
+              : stats.daysUntilBilling <= 7
+                ? "bg-amber-400/20 text-amber-100 ring-amber-300/30"
+                : "bg-emerald-400/20 text-emerald-100 ring-emerald-300/30"
+          }`}>
+            <span className="relative flex h-1.5 w-1.5">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
+                stats.daysUntilBilling <= 3 ? "bg-red-300" : stats.daysUntilBilling <= 7 ? "bg-amber-300" : "bg-emerald-300"
+              } opacity-75`} />
+              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
+                stats.daysUntilBilling <= 3 ? "bg-red-300" : stats.daysUntilBilling <= 7 ? "bg-amber-300" : "bg-emerald-300"
+              }`} />
+            </span>
+            {stats.daysUntilBilling} day{stats.daysUntilBilling === 1 ? "" : "s"} to billing
+          </div>
+        </div>
+
+        <div className="relative px-6 sm:px-10 py-6 sm:py-8">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">Operating Costs</h1>
+          <p className="text-sm sm:text-base text-white/65 mt-2 max-w-xl">
+            Track usage, spending, and the next billing cycle in real time.
+          </p>
+        </div>
+
+        <div className="relative px-6 sm:px-10 pb-6 sm:pb-8 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-3 sm:p-4">
+            <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-white/50">QR Price</div>
+            <div className="text-xl sm:text-2xl font-bold text-white tabular-nums mt-1">${stats.qrPrice.toFixed(2)}</div>
+            <div className="text-[10px] sm:text-xs text-white/50 mt-0.5">per certificate</div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-3 sm:p-4">
+            <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-emerald-200/80">This Period</div>
+            <div className="text-xl sm:text-2xl font-bold text-emerald-200 tabular-nums mt-1">${stats.currentPeriod.cost}</div>
+            <div className="text-[10px] sm:text-xs text-white/50 mt-0.5">{stats.currentPeriod.count} certs</div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-3 sm:p-4">
+            <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-white/50">All-Time</div>
+            <div className="text-xl sm:text-2xl font-bold text-white tabular-nums mt-1">{stats.totalCertificates}</div>
+            <div className="text-[10px] sm:text-xs text-white/50 mt-0.5">certificates</div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-3 sm:p-4">
+            <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-widest text-white/50">All-Time</div>
+            <div className="text-xl sm:text-2xl font-bold text-white tabular-nums mt-1">${stats.totalCost}</div>
+            <div className="text-[10px] sm:text-xs text-white/50 mt-0.5">total spent</div>
+          </div>
+        </div>
       </div>
 
       {/* Next Billing Date - Payment Reminder */}
@@ -240,35 +306,6 @@ export default function CostsPage() {
         </div>
       )}
 
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">QR Price</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">${stats.qrPrice.toFixed(2)}</p>
-          <p className="text-xs text-gray-400 mt-1">per certificate</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Current Period</p>
-          <p className="text-xl sm:text-2xl font-bold text-[#386E65] mt-1">${stats.currentPeriod.cost}</p>
-          <p className="text-xs text-gray-400 mt-1">
-            {stats.currentPeriod.count} certs
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Total Certs</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{stats.totalCertificates}</p>
-          <p className="text-xs text-gray-400 mt-1">all time</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Total Cost</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">${stats.totalCost}</p>
-          <p className="text-xs text-gray-400 mt-1">all time</p>
-        </div>
-      </div>
 
       {/* Current Billing Period Highlight */}
       <div className="relative bg-gradient-to-br from-[#386E65] to-[#1f4640] text-white rounded-2xl shadow-lg overflow-hidden p-5 sm:p-6 mb-8">
