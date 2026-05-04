@@ -263,107 +263,143 @@ export default function DashboardPage() {
           <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filter.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
           {filtered.map((cert) => {
             const isExpired = cert.expiryDate < today;
             const isExpiringSoon = !isExpired && cert.expiryDate <= in30Days;
             const initials = getInitials(cert.name);
             const tone = isExpired
-              ? { bg: "bg-red-50", text: "text-red-700", ring: "ring-red-100", dot: "bg-red-500", label: "Expired" }
+              ? { bg: "bg-red-50", text: "text-red-700", ring: "ring-red-100", dot: "bg-red-500", label: "Expired", accent: "from-red-400 to-red-300" }
               : isExpiringSoon
-                ? { bg: "bg-amber-50", text: "text-amber-700", ring: "ring-amber-100", dot: "bg-amber-500", label: "Expiring soon" }
-                : { bg: "bg-emerald-50", text: "text-emerald-700", ring: "ring-emerald-100", dot: "bg-emerald-500", label: "Active" };
+                ? { bg: "bg-amber-50", text: "text-amber-700", ring: "ring-amber-100", dot: "bg-amber-500", label: "Expiring soon", accent: "from-amber-400 to-amber-300" }
+                : { bg: "bg-emerald-50", text: "text-emerald-700", ring: "ring-emerald-100", dot: "bg-emerald-500", label: "Active", accent: "from-emerald-400 to-emerald-300" };
 
-            // Mini validity progress
             const issuedT = new Date(cert.dateIssued + "T00:00:00").getTime();
             const expiryT = new Date(cert.expiryDate + "T00:00:00").getTime();
             const todayT = Date.now();
             const totalSpan = Math.max(expiryT - issuedT, 1);
             const elapsed = Math.min(Math.max(todayT - issuedT, 0), totalSpan);
             const pct = Math.round((elapsed / totalSpan) * 100);
+            const dayMs = 24 * 60 * 60 * 1000;
+            const daysRemaining = Math.max(0, Math.floor((expiryT - todayT) / dayMs));
+            const daysExpiredAgo = Math.floor((todayT - expiryT) / dayMs);
 
             return (
               <div
                 key={cert.id}
-                className="group relative flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5 hover:bg-gradient-to-r hover:from-[#386E65]/[0.02] hover:to-transparent transition-all"
+                className="group relative bg-white rounded-2xl border border-gray-200 hover:border-[#386E65]/30 hover:shadow-xl hover:shadow-[#386E65]/5 transition-all duration-300 overflow-hidden flex flex-col"
               >
-                {/* Avatar + identity */}
-                <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  <div className="relative shrink-0">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#386E65] to-[#1f4640] ring-1 ring-[#386E65]/20 flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-lg shadow-[#386E65]/15">
-                      {initials || "—"}
+                {/* Top accent strip */}
+                <div className={`h-1 bg-gradient-to-r ${tone.accent}`} />
+
+                <div className="p-4 sm:p-5 flex-1 flex flex-col">
+                  {/* Header row: avatar + name + status */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="relative shrink-0">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#386E65] to-[#1f4640] ring-1 ring-[#386E65]/20 flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-lg shadow-[#386E65]/15">
+                        {initials || "—"}
+                      </div>
+                      <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ring-2 ring-white ${tone.dot}`} />
                     </div>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ring-2 ring-white ${tone.dot}`} />
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-gray-900 leading-snug break-words text-base sm:text-[17px] line-clamp-2">{cert.name}</p>
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ring-1 shrink-0 ${tone.bg} ${tone.text} ${tone.ring}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
+                          {tone.label}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1.5">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-mono tabular-nums px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
+                          #{cert.certificateNumber}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-mono px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
+                          {cert.accessCode}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                          </svg>
+                          {cert.country}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                      <p className="font-semibold text-gray-900 truncate text-base">{cert.name}</p>
-                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>
-                        {tone.label}
-                      </span>
+                  {/* Validity timeline */}
+                  <div className="bg-gray-50/70 border border-gray-100 rounded-xl p-3 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Issued</div>
+                        <div className="text-xs font-medium text-gray-700 tabular-nums">{formatDate(cert.dateIssued)}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className={`text-[10px] font-semibold uppercase tracking-widest ${
+                          isExpired ? "text-red-500" : isExpiringSoon ? "text-amber-600" : "text-emerald-600"
+                        }`}>
+                          {isExpired ? "Expired" : "Remaining"}
+                        </div>
+                        <div className={`text-xs font-bold tabular-nums ${
+                          isExpired ? "text-red-700" : isExpiringSoon ? "text-amber-700" : "text-emerald-700"
+                        }`}>
+                          {isExpired
+                            ? `${daysExpiredAgo} day${daysExpiredAgo === 1 ? "" : "s"} ago`
+                            : `${daysRemaining} day${daysRemaining === 1 ? "" : "s"}`}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Expires</div>
+                        <div className={`text-xs font-medium tabular-nums ${isExpired ? "text-red-700" : "text-gray-700"}`}>{formatDate(cert.expiryDate)}</div>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                      <span className="inline-flex items-center gap-1 font-mono tabular-nums">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.951.69h4.162c.969 0 1.371 1.24.588 1.81l-3.367 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.921-.755 1.688-1.539 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.072 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
-                        </svg>
-                        #{cert.certificateNumber}
-                      </span>
-                      <span className="inline-flex items-center gap-1 font-mono">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                        </svg>
-                        {cert.accessCode}
-                      </span>
+                    <div className="relative h-1.5 bg-gray-200/70 rounded-full overflow-hidden">
+                      <div
+                        className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r ${tone.accent}`}
+                        style={{ width: `${Math.min(pct, 100)}%` }}
+                      />
                     </div>
                   </div>
-                </div>
 
-                {/* Validity meta + progress (desktop) */}
-                <div className="hidden lg:flex flex-col w-56 shrink-0">
-                  <div className="flex items-center justify-between text-[11px] text-gray-500 mb-1.5">
-                    <span>Issued {formatDate(cert.dateIssued)}</span>
-                    <span className={isExpired ? "text-red-600 font-medium" : "text-gray-700 font-medium"}>{formatDate(cert.expiryDate)}</span>
-                  </div>
-                  <div className="relative h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`absolute inset-y-0 left-0 rounded-full ${
-                        isExpired ? "bg-red-400" : isExpiringSoon ? "bg-amber-400" : "bg-emerald-400"
-                      }`}
-                      style={{ width: `${Math.min(pct, 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    href={`/dashboard/certificates/${cert.id}`}
-                    prefetch
-                    className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2.5 bg-[#386E65] text-white rounded-xl hover:bg-[#2d5a53] active:scale-[0.97] transition-all text-sm font-semibold shadow-sm shadow-[#386E65]/15 hover:shadow-md hover:shadow-[#386E65]/25 group-hover:gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    View
-                    <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                  {role === "super_admin" && (
-                    <button
-                      onClick={() => handleDelete(cert.id, cert.name)}
-                      className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                      title="Delete"
-                      aria-label="Delete"
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 mt-auto pt-1">
+                    <Link
+                      href={`/dashboard/certificates/${cert.id}`}
+                      prefetch
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-3 bg-[#386E65] text-white rounded-xl hover:bg-[#2d5a53] active:scale-[0.98] transition-all text-sm font-semibold shadow-sm shadow-[#386E65]/15 hover:shadow-md hover:shadow-[#386E65]/25"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      View Certificate
+                      <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                    <a
+                      href={`/api/certificates/${cert.id}/download`}
+                      className="inline-flex items-center justify-center w-11 h-11 text-gray-500 hover:text-[#386E65] hover:bg-[#386E65]/10 rounded-xl transition-all border border-gray-200 hover:border-[#386E65]/30"
+                      title="Download PDF"
+                      aria-label="Download PDF"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                    </button>
-                  )}
+                    </a>
+                    {role === "super_admin" && (
+                      <button
+                        onClick={() => handleDelete(cert.id, cert.name)}
+                        className="inline-flex items-center justify-center w-11 h-11 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border border-gray-200 hover:border-red-200"
+                        title="Delete"
+                        aria-label="Delete"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
