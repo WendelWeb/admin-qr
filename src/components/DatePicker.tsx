@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const MONTH_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -58,7 +61,12 @@ export default function DatePicker({
   const [cursorY, setCursorY] = useState(initial[0]);
   const [cursorM, setCursorM] = useState(initial[1] - 1);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number; placeAbove: boolean } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   // When the value changes externally, sync cursor
   useEffect(() => {
@@ -68,15 +76,46 @@ export default function DatePicker({
     setCursorM(m - 1);
   }, [value]);
 
+  // Compute popover position when open, and on scroll/resize
+  useIsoLayoutEffect(() => {
+    if (!open) return;
+    function updatePos() {
+      if (!triggerRef.current) return;
+      const rect = triggerRef.current.getBoundingClientRect();
+      const popoverHeight = 380;
+      const popoverWidth = Math.max(rect.width, 320);
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const placeAbove = spaceBelow < popoverHeight && rect.top > popoverHeight;
+      let left = rect.left;
+      // Keep popover within viewport horizontally
+      if (left + popoverWidth > window.innerWidth - 8) {
+        left = Math.max(8, window.innerWidth - popoverWidth - 8);
+      }
+      setPos({
+        top: placeAbove ? rect.top - 8 : rect.bottom + 8,
+        left,
+        width: popoverWidth,
+        placeAbove,
+      });
+    }
+    updatePos();
+    window.addEventListener("resize", updatePos);
+    window.addEventListener("scroll", updatePos, true);
+    return () => {
+      window.removeEventListener("resize", updatePos);
+      window.removeEventListener("scroll", updatePos, true);
+    };
+  }, [open]);
+
   // Outside click + Escape close
   useEffect(() => {
     if (!open) return;
     function onDocClick(e: MouseEvent) {
-      if (!wrapperRef.current) return;
-      if (!wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setMode("day");
-      }
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target)) return;
+      if (popoverRef.current?.contains(target)) return;
+      setOpen(false);
+      setMode("day");
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -140,8 +179,9 @@ export default function DatePicker({
   for (let y = hi; y >= lo; y--) years.push(y);
 
   return (
-    <div ref={wrapperRef} className="relative">
+    <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={ariaLabel}
@@ -170,8 +210,18 @@ export default function DatePicker({
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute z-50 mt-2 left-0 right-0 sm:right-auto sm:w-80 bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden animate-in">
+      {mounted && open && pos && createPortal(
+        <div
+          ref={popoverRef}
+          style={{
+            position: "fixed",
+            top: pos.placeAbove ? undefined : pos.top,
+            bottom: pos.placeAbove ? window.innerHeight - pos.top : undefined,
+            left: pos.left,
+            width: pos.width,
+          }}
+          className="z-1000 bg-white rounded-2xl shadow-2xl ring-1 ring-gray-200 overflow-hidden"
+        >
           {/* Header */}
           <div className="px-4 py-3 bg-gradient-to-br from-[#386E65] to-[#1f4640] text-white flex items-center justify-between">
             <button
@@ -334,8 +384,9 @@ export default function DatePicker({
               ))}
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
