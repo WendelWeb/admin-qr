@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import NavProgress from "@/components/NavProgress";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -147,6 +148,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex bg-gray-50">
+      <NavProgress />
       {/* Mobile header bar */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-[#0e1c26] to-[#1a2a3a] text-white flex items-center justify-between px-4 h-14 lg:hidden border-b border-white/5">
         <button

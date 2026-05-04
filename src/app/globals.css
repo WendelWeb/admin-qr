@@ -20,3 +20,24 @@ body {
 input, select, textarea {
   color: #171717;
 }
+
+/* Default cursor for interactive elements — Tailwind v4 reset removes this */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a[href],
+label[for],
+summary,
+select:not(:disabled),
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="button"]:not(:disabled),
+input[type="reset"]:not(:disabled),
+input[type="file"]:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}

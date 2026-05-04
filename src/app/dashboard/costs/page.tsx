@@ -116,7 +116,10 @@ export default function CostsPage() {
 
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Operating Costs</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Operating Costs</h1>
+        <p className="text-sm text-gray-500 mt-1">Track usage, spending, and the next billing cycle.</p>
+      </div>
 
       {/* Next Billing Date - Payment Reminder */}
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 sm:p-5 mb-6">
@@ -240,13 +243,13 @@ export default function CostsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wide">QR Price</p>
           <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">${stats.qrPrice.toFixed(2)}</p>
           <p className="text-xs text-gray-400 mt-1">per certificate</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Current Period</p>
           <p className="text-xl sm:text-2xl font-bold text-[#386E65] mt-1">${stats.currentPeriod.cost}</p>
           <p className="text-xs text-gray-400 mt-1">
@@ -254,13 +257,13 @@ export default function CostsPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Total Certs</p>
           <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">{stats.totalCertificates}</p>
           <p className="text-xs text-gray-400 mt-1">all time</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4 sm:p-5">
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Total Cost</p>
           <p className="text-xl sm:text-2xl font-bold text-gray-800 mt-1">${stats.totalCost}</p>
           <p className="text-xs text-gray-400 mt-1">all time</p>
@@ -268,31 +271,35 @@ export default function CostsPage() {
       </div>
 
       {/* Current Billing Period Highlight */}
-      <div className="bg-[#386E65] text-white rounded-lg shadow p-4 sm:p-6 mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-base sm:text-lg font-semibold">Current Billing Period</h2>
-            <p className="text-sm opacity-80 mt-1">{stats.currentPeriod.label}</p>
-          </div>
-          <div className="mt-3 sm:mt-0 sm:text-right">
-            <p className="text-2xl sm:text-3xl font-bold">${stats.currentPeriod.cost}</p>
-            <p className="text-sm opacity-80">
-              {stats.currentPeriod.count} certificates x ${stats.qrPrice.toFixed(2)}
-            </p>
+      <div className="relative bg-gradient-to-br from-[#386E65] to-[#1f4640] text-white rounded-2xl shadow-lg overflow-hidden p-5 sm:p-6 mb-8">
+        <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-12 w-56 h-56 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+        <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60 mb-1">Current Billing Period</p>
+              <h2 className="text-lg sm:text-xl font-bold">{stats.currentPeriod.label}</h2>
+            </div>
+            <div className="mt-3 sm:mt-0 sm:text-right">
+              <p className="text-3xl sm:text-4xl font-bold tabular-nums">${stats.currentPeriod.cost}</p>
+              <p className="text-sm text-white/70 mt-0.5">
+                {stats.currentPeriod.count} certificates × ${stats.qrPrice.toFixed(2)}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* View Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto">
+      <div className="inline-flex gap-1 mb-6 p-1 bg-gray-100 rounded-xl overflow-x-auto">
         {(["billing", "daily", "monthly"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setView(tab)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap cursor-pointer ${
               view === tab
-                ? "bg-[#386E65] text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                ? "bg-white text-[#386E65] shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
             }`}
           >
             {tab === "billing" ? "Billing Periods" : tab === "daily" ? "Daily" : "Monthly"}
@@ -304,7 +311,7 @@ export default function CostsPage() {
       {view === "billing" && (
         <>
           {/* Desktop table */}
-          <div className="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
+          <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b">
@@ -370,7 +377,7 @@ export default function CostsPage() {
 
       {/* Daily Chart */}
       {view === "daily" && (
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
           <h3 className="text-sm font-semibold text-gray-600 mb-4">
             Daily Breakdown — Current Period
           </h3>
@@ -403,7 +410,7 @@ export default function CostsPage() {
 
       {/* Monthly Chart */}
       {view === "monthly" && (
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
           <h3 className="text-sm font-semibold text-gray-600 mb-4">Monthly Overview (Last 6 Months)</h3>
           {stats.monthly.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-8">No data yet</p>

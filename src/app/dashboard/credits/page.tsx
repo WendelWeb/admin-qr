@@ -120,28 +120,50 @@ export default function CreditsPage() {
   if (role !== "super_admin" && !loading) {
     return (
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Credits</h1>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-          <p className="text-yellow-800 text-sm">Only the super admin can manage credits.</p>
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Credits</h1>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+          <svg className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+          </svg>
+          <p className="text-amber-800 text-sm">Only the super admin can manage credits.</p>
         </div>
       </div>
     );
   }
 
-  if (loading) return <div className="text-gray-500">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-gray-400 text-sm">
+        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        Loading...
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Credit Management</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Credit Management</h1>
+        <p className="text-sm text-gray-500 mt-1">Track and adjust how many certificates remain in the issuing pool.</p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Current Balance */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className={`p-6 sm:p-8 text-center ${
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className={`relative p-6 sm:p-8 text-center overflow-hidden ${
             credits === 0
-              ? "bg-gradient-to-br from-red-50 to-red-100"
+              ? "bg-gradient-to-br from-red-50 to-rose-100"
               : "bg-gradient-to-br from-emerald-50 to-teal-50"
           }`}>
+            <div className={`absolute -top-16 -right-16 w-44 h-44 rounded-full blur-3xl pointer-events-none ${
+              credits === 0 ? "bg-red-300/30" : "bg-emerald-300/30"
+            }`} />
+            <div className="relative">
             <p className="text-sm text-gray-500 uppercase tracking-wide mb-2">Current Balance</p>
             <p className={`text-5xl sm:text-6xl font-bold ${
               credits === 0 ? "text-red-500" : "text-[#386E65]"
@@ -156,9 +178,10 @@ export default function CreditsPage() {
                   : "credits remaining"
               }
             </p>
+            </div>
           </div>
 
-          <div className="p-4 sm:p-6 border-t border-gray-100">
+          <div className="p-5 sm:p-6 border-t border-gray-100">
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <div className={`w-3 h-3 rounded-full ${credits === 0 ? "bg-red-500" : "bg-emerald-500"}`} />
               <span>
@@ -178,13 +201,13 @@ export default function CreditsPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleReset}
-                  className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
                 >
                   Reset to 0
                 </button>
                 <button
                   onClick={() => setShowSetExact(!showSetExact)}
-                  className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
                 >
                   Set exact amount
                 </button>
@@ -198,7 +221,7 @@ export default function CreditsPage() {
                     value={setExactValue}
                     onChange={(e) => setSetExactValue(e.target.value)}
                     placeholder="Enter value"
-                    className="flex-1 min-w-0 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent"
+                    className="flex-1 min-w-0 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] transition-all"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSetExact();
                       if (e.key === "Escape") { setShowSetExact(false); setSetExactValue(""); }
@@ -207,13 +230,13 @@ export default function CreditsPage() {
                   />
                   <button
                     onClick={handleSetExact}
-                    className="px-3 py-1.5 text-xs font-medium text-white bg-[#386E65] rounded-lg hover:bg-[#2d5a53] transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-[#386E65] rounded-lg hover:bg-[#2d5a53] transition-colors cursor-pointer"
                   >
                     Set
                   </button>
                   <button
                     onClick={() => { setShowSetExact(false); setSetExactValue(""); }}
-                    className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700"
+                    className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -224,10 +247,10 @@ export default function CreditsPage() {
         </div>
 
         {/* Add Credits */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-1">Add Credits</h2>
-          <p className="text-xs text-gray-400 mb-5">
-            Credits will be added to the current balance. Each credit allows the creation of one certificate.
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">Add Credits</h2>
+          <p className="text-xs text-gray-500 mb-5">
+            Credits are added to the current balance. Each credit allows the creation of one certificate.
           </p>
 
           {/* Quick presets */}
@@ -236,10 +259,10 @@ export default function CreditsPage() {
               <button
                 key={p}
                 onClick={() => setAmount(String(p))}
-                className={`py-2.5 rounded-lg text-sm font-medium transition-colors border ${
+                className={`py-2.5 rounded-xl text-sm font-medium transition-all border cursor-pointer ${
                   amount === String(p)
-                    ? "bg-[#386E65] text-white border-[#386E65]"
-                    : "bg-gray-50 text-gray-700 border-gray-200 hover:border-[#386E65] hover:text-[#386E65]"
+                    ? "bg-[#386E65] text-white border-[#386E65] shadow-sm shadow-[#386E65]/20"
+                    : "bg-gray-50 text-gray-700 border-gray-200 hover:border-[#386E65]/40 hover:text-[#386E65]"
                 }`}
               >
                 +{p}
@@ -249,7 +272,7 @@ export default function CreditsPage() {
 
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Custom Amount</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Custom Amount</label>
               <input
                 type="number"
                 min="1"
@@ -257,13 +280,20 @@ export default function CreditsPage() {
                 onChange={(e) => setAmount(e.target.value)}
                 required
                 placeholder="Enter number of credits to add"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] text-sm transition-all"
               />
             </div>
 
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
             {success && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-start gap-2">
+                <svg className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 <p className="text-emerald-700 text-sm">{success}</p>
               </div>
             )}
@@ -271,7 +301,7 @@ export default function CreditsPage() {
             <button
               type="submit"
               disabled={adding || !amount}
-              className="w-full py-2.5 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm font-medium disabled:opacity-50"
+              className="w-full py-2.5 bg-[#386E65] text-white rounded-xl hover:bg-[#2d5a53] transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {adding ? "Adding..." : `Add ${amount ? amount : "0"} Credits`}
             </button>

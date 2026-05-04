@@ -202,11 +202,14 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Settings</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Settings</h1>
+        <p className="text-sm text-gray-500 mt-1">Manage your account, security, and system-wide preferences.</p>
+      </div>
 
-      <div className="space-y-6 max-w-lg">
+      <div className="space-y-5 max-w-2xl">
         {/* Change Password */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">Change Password</h2>
 
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -217,7 +220,7 @@ export default function SettingsPage() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] text-sm transition-all"
               />
             </div>
 
@@ -228,7 +231,7 @@ export default function SettingsPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] text-sm transition-all"
               />
             </div>
 
@@ -239,7 +242,7 @@ export default function SettingsPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent text-sm"
+                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] text-sm transition-all"
               />
             </div>
 
@@ -249,7 +252,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm disabled:opacity-50"
+              className="px-6 py-2.5 bg-[#386E65] text-white rounded-xl hover:bg-[#2d5a53] transition-colors text-sm font-medium disabled:opacity-50"
             >
               {loading ? "Saving..." : "Change Password"}
             </button>
@@ -257,18 +260,21 @@ export default function SettingsPage() {
         </div>
 
         {/* PDF Template */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-1">Certificate Template</h2>
           <p className="text-xs text-gray-400 mb-4">
             Upload a PDF template. Certificate data and QR code will be overlaid on top.
           </p>
 
           {templateName ? (
-            <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-md mb-4">
-              <span className="text-green-700 text-sm font-medium truncate min-w-0 flex-1">{templateName}</span>
+            <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl mb-4">
+              <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-emerald-700 text-sm font-medium truncate min-w-0 flex-1">{templateName}</span>
               <button
                 onClick={handleTemplateDelete}
-                className="text-xs text-red-600 hover:text-red-800 underline shrink-0"
+                className="text-xs text-red-600 hover:text-red-800 font-medium shrink-0 cursor-pointer"
               >
                 Remove
               </button>
@@ -277,7 +283,7 @@ export default function SettingsPage() {
             <p className="text-sm text-gray-500 mb-4">No template uploaded yet.</p>
           )}
 
-          <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm cursor-pointer">
+          <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#386E65] text-white rounded-xl hover:bg-[#2d5a53] transition-colors text-sm font-medium cursor-pointer">
             {templateUploading ? "Uploading..." : templateName ? "Replace Template" : "Upload PDF Template"}
             <input
               type="file"
@@ -294,7 +300,7 @@ export default function SettingsPage() {
 
         {/* Maintenance Mode - Super Admin Only */}
         {role === "super_admin" && (
-          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-lg font-semibold text-gray-700">System Maintenance</h2>
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -317,9 +323,9 @@ export default function SettingsPage() {
             <button
               onClick={handleMaintenanceToggle}
               disabled={maintenanceLoading}
-              className={`px-6 py-2.5 rounded-md text-sm font-medium transition-colors disabled:opacity-50 ${
+              className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${
                 maintenance
-                  ? "bg-green-600 text-white hover:bg-green-700"
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
                   : "bg-amber-600 text-white hover:bg-amber-700"
               }`}
             >
@@ -342,7 +348,7 @@ export default function SettingsPage() {
 
         {/* QR Price - Super Admin Only */}
         {role === "super_admin" && (
-          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
             <h2 className="text-lg font-semibold text-gray-700 mb-1">QR Code Price</h2>
             <p className="text-xs text-gray-400 mb-4">Only visible to super admins</p>
 
@@ -371,7 +377,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={priceLoading}
-                className="px-6 py-2 bg-[#386E65] text-white rounded-md hover:bg-[#2d5a53] transition-colors text-sm disabled:opacity-50"
+                className="px-6 py-2.5 bg-[#386E65] text-white rounded-xl hover:bg-[#2d5a53] transition-colors text-sm font-medium disabled:opacity-50"
               >
                 {priceLoading ? "Saving..." : "Update Price"}
               </button>
@@ -381,7 +387,7 @@ export default function SettingsPage() {
 
         {/* Billing Simulation - Super Admin Only */}
         {role === "super_admin" && (
-          <div className="bg-white rounded-lg shadow p-4 sm:p-6 border-l-4 border-indigo-500">
+          <div className="bg-white rounded-2xl border border-gray-200 border-l-4 border-l-indigo-500 p-5 sm:p-6">
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-lg font-semibold text-gray-700">Billing Simulation</h2>
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -426,7 +432,7 @@ export default function SettingsPage() {
                 setSimulating(false);
               }}
               disabled={simulating || billingExpired}
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50"
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors text-sm font-medium disabled:opacity-50"
             >
               {simulating ? "Simulating..." : billingExpired ? "Billing Already Expired" : "Simulate \"The 4th Has Arrived\""}
             </button>
@@ -446,7 +452,7 @@ export default function SettingsPage() {
                     setSimulating(false);
                   }}
                   disabled={simulating}
-                  className="px-6 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50"
                 >
                   {simulating ? "Restoring..." : "End Simulation — Restore Billing"}
                 </button>

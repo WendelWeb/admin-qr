@@ -52,7 +52,17 @@ const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-md focus:out
 export default function NewCertificatePage() {
   const router = useRouter();
   const [system, setSystem] = useState<CertSystem | null>(null);
+  const [transitioning, setTransitioning] = useState<CertSystem | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function pickSystem(choice: CertSystem) {
+    if (transitioning) return;
+    setTransitioning(choice);
+    setTimeout(() => {
+      setSystem(choice);
+      setTransitioning(null);
+    }, 650);
+  }
   const [error, setError] = useState("");
   const [, setCredits] = useState<number | null>(null);
   const [, setBillingExpired] = useState(false);
@@ -185,9 +195,23 @@ export default function NewCertificatePage() {
           {/* ─── LEGACY CARD ─── */}
           <button
             type="button"
-            onClick={() => setSystem("legacy")}
-            className="group relative text-left bg-white rounded-2xl border border-gray-200 hover:border-[#386E65] hover:shadow-xl transition-all duration-300 overflow-hidden"
+            onClick={() => pickSystem("legacy")}
+            disabled={transitioning !== null}
+            className={`group relative text-left bg-white rounded-2xl border border-gray-200 hover:border-[#386E65] hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer disabled:cursor-wait ${
+              transitioning === "legacy" ? "ring-2 ring-[#386E65] shadow-xl" : ""
+            } ${transitioning && transitioning !== "legacy" ? "opacity-40" : ""}`}
           >
+            {transitioning === "legacy" && (
+              <div className="absolute inset-0 z-10 bg-white/70 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
+                <div className="flex flex-col items-center gap-2">
+                  <svg className="w-7 h-7 text-[#386E65] animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-[#386E65] uppercase tracking-widest">Loading…</span>
+                </div>
+              </div>
+            )}
             <div className="absolute top-4 right-4 px-2.5 py-1 bg-[#386E65]/10 text-[#386E65] text-[11px] font-semibold rounded-full uppercase tracking-wide">
               Currently Active
             </div>
@@ -243,9 +267,23 @@ export default function NewCertificatePage() {
           {/* ─── NEW CARD ─── */}
           <button
             type="button"
-            onClick={() => setSystem("new")}
-            className="group relative text-left bg-gradient-to-br from-[#386E65] to-[#1f4640] rounded-2xl text-white hover:shadow-2xl transition-all duration-300 overflow-hidden"
+            onClick={() => pickSystem("new")}
+            disabled={transitioning !== null}
+            className={`group relative text-left bg-gradient-to-br from-[#386E65] to-[#1f4640] rounded-2xl text-white hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer disabled:cursor-wait ${
+              transitioning === "new" ? "ring-2 ring-white/40 shadow-2xl" : ""
+            } ${transitioning && transitioning !== "new" ? "opacity-40" : ""}`}
           >
+            {transitioning === "new" && (
+              <div className="absolute inset-0 z-10 bg-[#1f4640]/70 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
+                <div className="flex flex-col items-center gap-2">
+                  <svg className="w-7 h-7 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <span className="text-xs font-semibold text-white uppercase tracking-widest">Loading…</span>
+                </div>
+              </div>
+            )}
             <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/5 blur-2xl" />
             <div className="absolute -bottom-20 -left-20 w-56 h-56 rounded-full bg-white/5 blur-3xl" />
 
