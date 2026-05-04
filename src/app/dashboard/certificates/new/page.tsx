@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import DatePicker from "@/components/DatePicker";
 
 interface StaffMember {
   id: number;
@@ -569,39 +570,21 @@ export default function NewCertificatePage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Date of Birth <span className="text-[#386E65]">*</span></label>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-1">Day</label>
-                  <select value={dobDay} onChange={(e) => setDobDay(e.target.value)} className={`w-full ${selectClass}`}>
-                    <option value="">Day</option>
-                    {Array.from({ length: dobDaysInMonth }, (_, i) => (
-                      <option key={i + 1} value={String(i + 1).padStart(2, "0")}>{i + 1}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-1">Month</label>
-                  <select value={dobMonth} onChange={(e) => setDobMonth(e.target.value)} className={`w-full ${selectClass}`}>
-                    <option value="">Month</option>
-                    {MONTHS.map((m) => (<option key={m.value} value={m.value}>{m.label}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-1">Year</label>
-                  <select value={dobYear} onChange={(e) => setDobYear(e.target.value)} className={`w-full ${selectClass}`}>
-                    <option value="">Year</option>
-                    {dobYears.map((y) => (<option key={y} value={y}>{y}</option>))}
-                  </select>
-                </div>
-              </div>
-              {dobDay && dobMonth && dobYear && (
-                <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-[#386E65]/10 text-[#386E65] rounded-full font-medium">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  {formatPreview(dobDay, dobMonth, dobYear)}
-                </div>
-              )}
+              <DatePicker
+                value={dobDay && dobMonth && dobYear ? `${dobYear}-${dobMonth}-${dobDay}` : ""}
+                onChange={(v) => {
+                  if (!v) { setDobDay(""); setDobMonth(""); setDobYear(""); return; }
+                  const [y, m, d] = v.split("-");
+                  setDobYear(y);
+                  setDobMonth(m);
+                  setDobDay(d);
+                }}
+                placeholder="Select date of birth"
+                minYear={currentYear - 100}
+                maxYear={currentYear}
+                ariaLabel="Date of birth"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Click to open the calendar. The header lets you jump to a specific year.</p>
             </div>
 
             <div>
@@ -634,49 +617,31 @@ export default function NewCertificatePage() {
           <div className="p-5 sm:p-6 space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Date Issued <span className="text-[#386E65]">*</span></label>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-1">Day</label>
-                  <select value={issuedDay} onChange={(e) => setIssuedDay(e.target.value)} className={`w-full ${selectClass}`}>
-                    <option value="">Day</option>
-                    {Array.from({ length: issuedDaysInMonth }, (_, i) => (
-                      <option key={i + 1} value={String(i + 1).padStart(2, "0")}>{i + 1}</option>
-                    ))}
-                  </select>
+              <DatePicker
+                value={issuedDay && issuedMonth && issuedYear ? `${issuedYear}-${issuedMonth}-${issuedDay}` : ""}
+                onChange={(v) => {
+                  if (!v) { setIssuedDay(""); setIssuedMonth(""); setIssuedYear(""); return; }
+                  const [y, m, d] = v.split("-");
+                  setIssuedYear(y);
+                  setIssuedMonth(m);
+                  setIssuedDay(d);
+                }}
+                placeholder="Select issuance date"
+                minYear={currentYear - 2}
+                maxYear={currentYear + 2}
+                disableWeekends
+                invalid={issuedIsWeekend}
+                ariaLabel="Date issued"
+              />
+              {issuedIsWeekend && (
+                <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-red-50 text-red-700 rounded-full font-medium ring-1 ring-red-100">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                  </svg>
+                  Weekend dates are not allowed.
                 </div>
-                <div>
-                  <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-1">Month</label>
-                  <select value={issuedMonth} onChange={(e) => setIssuedMonth(e.target.value)} className={`w-full ${selectClass}`}>
-                    <option value="">Month</option>
-                    {MONTHS.map((m) => (<option key={m.value} value={m.value}>{m.label}</option>))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-1">Year</label>
-                  <select value={issuedYear} onChange={(e) => setIssuedYear(e.target.value)} className={`w-full ${selectClass}`}>
-                    <option value="">Year</option>
-                    {issuedYears.map((y) => (<option key={y} value={y}>{y}</option>))}
-                  </select>
-                </div>
-              </div>
-              {issuedDay && issuedMonth && issuedYear && (
-                issuedIsWeekend ? (
-                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-red-50 text-red-700 rounded-full font-medium ring-1 ring-red-100">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
-                    </svg>
-                    Weekend dates are not allowed.
-                  </div>
-                ) : (
-                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-[#386E65]/10 text-[#386E65] rounded-full font-medium">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {formatPreview(issuedDay, issuedMonth, issuedYear)}
-                  </div>
-                )
               )}
-              <p className="text-xs text-gray-400 mt-2">The date the certificate was issued. Weekends (Saturday & Sunday) are not allowed.</p>
+              <p className="text-xs text-gray-400 mt-2">Weekends (Saturday & Sunday) are blocked in the calendar.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
