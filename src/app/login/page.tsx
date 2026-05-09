@@ -1,14 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import DevDisconnectedScreen from "@/components/DevDisconnectedScreen";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [devDisconnected, setDevDisconnected] = useState<boolean | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/dev-disconnect")
+      .then((r) => r.json())
+      .then((d) => setDevDisconnected(!!d.devDisconnected))
+      .catch(() => setDevDisconnected(false));
+  }, []);
+
+  if (devDisconnected) {
+    return <DevDisconnectedScreen />;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

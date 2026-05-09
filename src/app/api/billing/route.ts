@@ -121,6 +121,7 @@ export async function GET() {
     billingPaidUntil: toDisplayDate(billingPaidUntil),
     isExpired,
     maintenanceMode: config?.maintenanceMode ?? false,
+    devDisconnected: config?.devDisconnected ?? false,
     nextBillingDate: getNextBillingDateDisplay(),
     billingSummary,
   });

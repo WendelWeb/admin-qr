@@ -21,6 +21,10 @@ export default function SettingsPage() {
   const [maintenance, setMaintenance] = useState(false);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
+  // Dev disconnect (super admin "kill switch")
+  const [devDisconnected, setDevDisconnected] = useState(false);
+  const [devDisconnectLoading, setDevDisconnectLoading] = useState(false);
+
   // Template settings
   const [templateName, setTemplateName] = useState<string | null>(null);
   const [templateUploading, setTemplateUploading] = useState(false);
@@ -52,6 +56,7 @@ export default function SettingsPage() {
       .then((data) => {
         setMaintenance(!!data.maintenanceMode);
         setBillingExpired(!!data.isExpired);
+        setDevDisconnected(!!data.devDisconnected);
       });
 
     // Get current template
@@ -162,6 +167,31 @@ export default function SettingsPage() {
       // silently fail
     }
     setMaintenanceLoading(false);
+  }
+
+  async function handleDevDisconnectToggle() {
+    const next = !devDisconnected;
+    if (next && !confirm(
+      "Simulate disconnecting the project?\n\n" +
+      "Both the admin console (for regular admins) and the public QR verification site will display a 'Project Disconnected by the Developer' screen until you toggle this off.\n\n" +
+      "You will keep full access as super admin."
+    )) return;
+
+    setDevDisconnectLoading(true);
+    try {
+      const res = await fetch("/api/dev-disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDevDisconnected(!!data.devDisconnected);
+      }
+    } catch {
+      // silently fail
+    }
+    setDevDisconnectLoading(false);
   }
 
   async function handlePriceSubmit(e: React.FormEvent) {
@@ -530,6 +560,96 @@ export default function SettingsPage() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Developer Kill-Switch - Super Admin Only */}
+        {role === "super_admin" && (
+          <div className="relative bg-gradient-to-br from-[#1a0a0a] via-[#2b1212] to-[#3a1818] rounded-2xl text-white overflow-hidden ring-1 ring-red-500/20 shadow-xl">
+            <div className="absolute -top-24 -right-20 w-64 h-64 rounded-full bg-red-500/20 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-32 -left-16 w-72 h-72 rounded-full bg-rose-500/10 blur-3xl pointer-events-none" />
+
+            <div className="relative p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-red-500/20 ring-1 ring-red-400/30 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold text-white">Developer Kill-Switch</h2>
+                    <p className="text-[11px] text-white/50">Super admin only · simulates a full project disconnect.</p>
+                  </div>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ring-1 ${
+                  devDisconnected
+                    ? "bg-red-500/25 text-red-100 ring-red-300/40"
+                    : "bg-emerald-400/15 text-emerald-100 ring-emerald-300/30"
+                }`}>
+                  <span className="relative flex h-1.5 w-1.5">
+                    {devDisconnected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-300 opacity-75" />}
+                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${devDisconnected ? "bg-red-300" : "bg-emerald-300"}`} />
+                  </span>
+                  {devDisconnected ? "Disconnected" : "Connected"}
+                </span>
+              </div>
+
+              <p className="text-sm text-white/75 leading-relaxed mb-4">
+                {devDisconnected
+                  ? "The project is currently presented as disconnected. Regular admins cannot sign in, and the public QR verification site is showing the disconnect notice. You can keep full access as super admin and toggle this off at any time to restore service."
+                  : "Engaging this switch immediately presents this admin console (for regular admins) and the public QR verification site as if the developer had revoked access. Both surfaces display a credible \"Project Disconnected by the Developer\" notice. Use this only when you intend to make the project appear offline."}
+              </p>
+
+              <div className="grid sm:grid-cols-3 gap-2 mb-5 text-xs">
+                <div className="bg-white/5 ring-1 ring-white/10 rounded-xl p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold mb-0.5">Affects</div>
+                  <div className="text-white/85 font-medium">Admin + QR site</div>
+                </div>
+                <div className="bg-white/5 ring-1 ring-white/10 rounded-xl p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold mb-0.5">Bypassed by</div>
+                  <div className="text-white/85 font-medium">Super admin only</div>
+                </div>
+                <div className="bg-white/5 ring-1 ring-white/10 rounded-xl p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold mb-0.5">Reversible</div>
+                  <div className="text-white/85 font-medium">Yes, instantly</div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleDevDisconnectToggle}
+                disabled={devDisconnectLoading}
+                className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 ${
+                  devDisconnected
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-md shadow-emerald-500/20"
+                    : "bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-600/30"
+                }`}
+              >
+                {devDisconnectLoading ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Updating…
+                  </>
+                ) : devDisconnected ? (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Reconnect Project
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    Simulate Developer Disconnect
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -52,5 +52,6 @@ export const settings = pgTable("settings", {
   credits: integer("credits").notNull().default(0),
   billingPaidUntil: date("billing_paid_until"),
   maintenanceMode: boolean("maintenance_mode").notNull().default(false),
+  devDisconnected: boolean("dev_disconnected").notNull().default(false),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

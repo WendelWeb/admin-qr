@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import NavProgress from "@/components/NavProgress";
+import DevDisconnectedScreen from "@/components/DevDisconnectedScreen";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,6 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [credits, setCredits] = useState<number | null>(null);
   const [billingExpired, setBillingExpired] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
+  const [devDisconnected, setDevDisconnected] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   function refreshData() {
@@ -21,7 +23,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     fetch("/api/billing")
       .then((r) => r.json())
-      .then((data) => { setBillingExpired(!!data.isExpired); setMaintenance(!!data.maintenanceMode); });
+      .then((data) => {
+        setBillingExpired(!!data.isExpired);
+        setMaintenance(!!data.maintenanceMode);
+        setDevDisconnected(!!data.devDisconnected);
+      });
   }
 
   useEffect(() => {
@@ -95,6 +101,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </svg>
       )},
     );
+  }
+
+  // Total blackout when the project has been disconnected by the developer.
+  // Super admins still see the dashboard so they can flip the toggle back.
+  if (devDisconnected && role && role !== "super_admin") {
+    return <DevDisconnectedScreen />;
   }
 
   // Total blackout for non-super-admin during maintenance
