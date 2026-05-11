@@ -1,24 +1,10 @@
-import { db } from "@/db";
-import { settings } from "@/db/schema";
-import DevDisconnectedScreen from "@/components/DevDisconnectedScreen";
 import LoginForm from "./_form";
 
-// Always read the live disconnect flag — never serve a cached login page.
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-export default async function LoginPage() {
-  let disconnected = false;
-  try {
-    const [config] = await db.select().from(settings).limit(1);
-    disconnected = !!config?.devDisconnected;
-  } catch {
-    disconnected = false;
-  }
-
-  if (disconnected) {
-    return <DevDisconnectedScreen />;
-  }
-
+// We can't know on the server whether the visitor is the super_admin (no
+// session yet), so we always render the form. The /api/auth/login route
+// rejects non-super-admin sign-ins with DEV_DISCONNECTED when the project
+// is disconnected, and LoginForm swaps to the disconnect screen on that
+// response. Super admins log in normally.
+export default function LoginPage() {
   return <LoginForm />;
 }

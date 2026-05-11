@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import DevDisconnectedScreen from "@/components/DevDisconnectedScreen";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [disconnected, setDisconnected] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -23,6 +25,18 @@ export default function LoginForm() {
       });
 
       if (!res.ok) {
+        // The dev has disconnected the project. Regular admins get this
+        // even with valid credentials — surface the disconnect screen
+        // instead of an "invalid credentials" message.
+        if (res.status === 503) {
+          try {
+            const data = await res.json();
+            if (data?.code === "DEV_DISCONNECTED") {
+              setDisconnected(true);
+              return;
+            }
+          } catch {}
+        }
         setError("Invalid email or password");
         setLoading(false);
         return;
@@ -33,6 +47,10 @@ export default function LoginForm() {
       setError("An error occurred. Please try again.");
       setLoading(false);
     }
+  }
+
+  if (disconnected) {
+    return <DevDisconnectedScreen />;
   }
 
   return (
