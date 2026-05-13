@@ -65,7 +65,10 @@ export async function GET(
         // so we must send under that exact key.
         "CERTFICATE NUMBER": String(cert.certificateNumber),
         "ACCESS CODE": cert.accessCode,
-        "DATE OF BIRTH": formatDateShort(cert.dateOfBirth),
+        // New template uses full month names everywhere ("15 March 1994",
+        // "05, November 2025"), unlike the legacy template which kept the
+        // abbreviated DOB style.
+        "DATE OF BIRTH": formatDateFull(cert.dateOfBirth),
         "DATE ISSUED": formatDateFull(cert.dateIssued),
         "EXPIRY DATE": formatDateFull(cert.expiryDate),
         "EMPLOYER NAME": cert.employerName || "",
