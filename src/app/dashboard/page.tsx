@@ -45,6 +45,9 @@ interface Certificate {
   examiningPhysician: string;
   medicalOfficer: string;
   createdAt: string;
+  system?: string;
+  employerName?: string | null;
+  purposeOfResidency?: string | null;
 }
 
 export default function DashboardPage() {
@@ -53,6 +56,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "expiring" | "expired">("all");
+  const [systemFilter, setSystemFilter] = useState<"all" | "legacy" | "new">("all");
 
   useEffect(() => {
     fetch("/api/auth/me").then((r) => r.json()).then((d) => { if (d.role) setRole(d.role); });
@@ -99,12 +103,17 @@ export default function DashboardPage() {
   const activeCount = certificates.length - expired;
 
   const filtered = certificates.filter((c) => {
+    const sys = c.system === "new" ? "new" : "legacy";
+    if (systemFilter !== "all" && sys !== systemFilter) return false;
     if (filter === "all") return true;
     if (filter === "expired") return c.expiryDate < today;
     if (filter === "expiring") return c.expiryDate >= today && c.expiryDate <= in30Days;
     if (filter === "active") return c.expiryDate >= today;
     return true;
   });
+
+  const newSystemCount = certificates.filter((c) => c.system === "new").length;
+  const legacySystemCount = certificates.length - newSystemCount;
 
   function getInitials(name: string) {
     return name.trim().split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("");
@@ -206,6 +215,40 @@ export default function DashboardPage() {
         })}
       </div>
 
+      {/* System filter (Old / New) */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mr-1">System</span>
+        {([
+          { key: "all", label: "Both", count: certificates.length, tone: "default" as const },
+          { key: "legacy", label: "Old", count: legacySystemCount, tone: "legacy" as const },
+          { key: "new", label: "New", count: newSystemCount, tone: "new" as const },
+        ]).map((chip) => {
+          const isActive = systemFilter === chip.key;
+          const toneCls = isActive
+            ? chip.tone === "legacy"
+              ? "bg-[#386E65] text-white border-[#386E65]"
+              : chip.tone === "new"
+                ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-500"
+                : "bg-gray-900 text-white border-gray-900"
+            : "bg-white text-gray-600 border-gray-200 hover:border-gray-300";
+          return (
+            <button
+              key={chip.key}
+              onClick={() => setSystemFilter(chip.key as "all" | "legacy" | "new")}
+              className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-medium transition-all ${toneCls}`}
+            >
+              {chip.tone === "new" && !isActive && (
+                <svg className="w-3 h-3 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              )}
+              {chip.label}
+              <span className={`tabular-nums ${isActive ? "opacity-90" : "text-gray-400"}`}>{chip.count}</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Search */}
       <form onSubmit={handleSearch} className="mb-4">
         <div className="flex flex-col sm:flex-row gap-2">
@@ -268,11 +311,32 @@ export default function DashboardPage() {
             const isExpired = cert.expiryDate < today;
             const isExpiringSoon = !isExpired && cert.expiryDate <= in30Days;
             const initials = getInitials(cert.name);
+            const isNewSystem = cert.system === "new";
             const tone = isExpired
               ? { bg: "bg-red-50", text: "text-red-700", ring: "ring-red-100", dot: "bg-red-500", label: "Expired", accent: "from-red-400 to-red-300" }
               : isExpiringSoon
                 ? { bg: "bg-amber-50", text: "text-amber-700", ring: "ring-amber-100", dot: "bg-amber-500", label: "Expiring soon", accent: "from-amber-400 to-amber-300" }
                 : { bg: "bg-emerald-50", text: "text-emerald-700", ring: "ring-emerald-100", dot: "bg-emerald-500", label: "Active", accent: "from-emerald-400 to-emerald-300" };
+            // Per-system styling: legacy = teal, new = indigo/purple
+            const sysStyle = isNewSystem
+              ? {
+                  avatarBg: "bg-gradient-to-br from-indigo-500 to-purple-600",
+                  avatarRing: "ring-indigo-400/30",
+                  avatarShadow: "shadow-indigo-500/20",
+                  cardHoverBorder: "hover:border-indigo-300/50 hover:shadow-indigo-500/10",
+                  pillBg: "bg-gradient-to-br from-indigo-500 to-purple-600 text-white ring-indigo-400/40",
+                  accent: "from-indigo-500 via-violet-500 to-purple-500",
+                  label: "New",
+                }
+              : {
+                  avatarBg: "bg-gradient-to-br from-[#386E65] to-[#1f4640]",
+                  avatarRing: "ring-[#386E65]/20",
+                  avatarShadow: "shadow-[#386E65]/15",
+                  cardHoverBorder: "hover:border-[#386E65]/30 hover:shadow-[#386E65]/5",
+                  pillBg: "bg-[#386E65]/10 text-[#386E65] ring-[#386E65]/20",
+                  accent: "from-[#386E65] to-[#1f4640]",
+                  label: "Old",
+                };
 
             const issuedT = new Date(cert.dateIssued + "T00:00:00").getTime();
             const expiryT = new Date(cert.expiryDate + "T00:00:00").getTime();
@@ -287,16 +351,16 @@ export default function DashboardPage() {
             return (
               <div
                 key={cert.id}
-                className="group relative bg-white rounded-2xl border border-gray-200 hover:border-[#386E65]/30 hover:shadow-xl hover:shadow-[#386E65]/5 transition-all duration-300 overflow-hidden flex flex-col"
+                className={`group relative bg-white rounded-2xl border border-gray-200 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col ${sysStyle.cardHoverBorder}`}
               >
-                {/* Top accent strip */}
-                <div className={`h-1 bg-gradient-to-r ${tone.accent}`} />
+                {/* Top accent strip — colored by system (legacy=teal, new=indigo) */}
+                <div className={`h-1 bg-gradient-to-r ${sysStyle.accent}`} />
 
                 <div className="p-4 sm:p-5 flex-1 flex flex-col">
                   {/* Header row: avatar + name + status */}
                   <div className="flex items-start gap-3 mb-4">
                     <div className="relative shrink-0">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#386E65] to-[#1f4640] ring-1 ring-[#386E65]/20 flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-lg shadow-[#386E65]/15">
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${sysStyle.avatarBg} ring-1 ${sysStyle.avatarRing} flex items-center justify-center text-base sm:text-lg font-bold text-white shadow-lg ${sysStyle.avatarShadow}`}>
                         {initials || "—"}
                       </div>
                       <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full ring-2 ring-white ${tone.dot}`} />
@@ -305,10 +369,20 @@ export default function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-semibold text-gray-900 leading-snug break-words text-base sm:text-[17px] line-clamp-2">{cert.name}</p>
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ring-1 shrink-0 ${tone.bg} ${tone.text} ${tone.ring}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
-                          {tone.label}
-                        </span>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ring-1 ${tone.bg} ${tone.text} ${tone.ring}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
+                            {tone.label}
+                          </span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ring-1 ${sysStyle.pillBg}`}>
+                            {isNewSystem && (
+                              <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            )}
+                            {sysStyle.label}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1.5">
                         <span className="inline-flex items-center gap-1 text-[11px] font-mono tabular-nums px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
@@ -324,6 +398,23 @@ export default function DashboardPage() {
                           {cert.country}
                         </span>
                       </div>
+                      {isNewSystem && (cert.employerName || cert.purposeOfResidency) && (
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1.5">
+                          {cert.employerName && (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-indigo-700 bg-indigo-50 ring-1 ring-indigo-100 px-1.5 py-0.5 rounded">
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                              </svg>
+                              {cert.employerName}
+                            </span>
+                          )}
+                          {cert.purposeOfResidency && (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-purple-700 bg-purple-50 ring-1 ring-purple-100 px-1.5 py-0.5 rounded">
+                              {cert.purposeOfResidency}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 

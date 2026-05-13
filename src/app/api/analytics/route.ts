@@ -65,15 +65,39 @@ export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const from = params.get("from");
   const to = params.get("to");
+  const systemParam = params.get("system");
 
   const [config] = await db.select().from(settings).limit(1);
   const qrPrice = parseFloat(config?.qrPrice ?? "0.40");
 
-  // Build date filter using SQL date cast to avoid timezone issues
+  // Build date + system filter using SQL date cast to avoid timezone issues
   const conditions = [];
   if (from) conditions.push(sql`${certificates.createdAt}::date >= ${from}::date`);
   if (to) conditions.push(sql`${certificates.createdAt}::date <= ${to}::date`);
+  if (systemParam === "legacy" || systemParam === "new") {
+    conditions.push(sql`${certificates.system} = ${systemParam}`);
+  }
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // System split — independent of the systemParam filter so the UI can
+  // always show the total breakdown.
+  const sysSplit = await db
+    .select({
+      system: certificates.system,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(certificates)
+    .where(
+      and(
+        ...(from ? [sql`${certificates.createdAt}::date >= ${from}::date`] : []),
+        ...(to ? [sql`${certificates.createdAt}::date <= ${to}::date`] : []),
+      )
+    )
+    .groupBy(certificates.system);
+  const bySystem = {
+    legacy: sysSplit.find((r) => r.system !== "new")?.count ?? 0,
+    new: sysSplit.find((r) => r.system === "new")?.count ?? 0,
+  };
 
   // --- BASIC COUNTS ---
   const [totalInRange] = await db
@@ -443,5 +467,6 @@ export async function GET(req: NextRequest) {
     records,
     projection,
     sparklineData,
+    bySystem,
   });
 }

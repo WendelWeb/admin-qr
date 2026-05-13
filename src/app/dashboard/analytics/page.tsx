@@ -60,6 +60,7 @@ interface AnalyticsData {
     trend: string;
   };
   sparklineData: number[];
+  bySystem?: { legacy: number; new: number };
 }
 
 // ─── CONSTANTS ───────────────────────────────────────────
@@ -161,6 +162,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [systemFilter, setSystemFilter] = useState<"all" | "legacy" | "new">("all");
   const [activePreset, setActivePreset] = useState<PresetKey>("all");
   const [chartView, setChartView] = useState<"daily" | "weekly" | "monthly">("daily");
   const [exporting, setExporting] = useState(false);
@@ -185,12 +187,13 @@ export default function AnalyticsPage() {
     const p = new URLSearchParams();
     if (from) p.set("from", from);
     if (to) p.set("to", to);
+    if (systemFilter !== "all") p.set("system", systemFilter);
     const res = await fetch(`/api/analytics?${p}`);
     const d = await res.json();
     setData(d);
     setLoading(false);
     setTimeout(() => setLoaded(true), 50);
-  }, [from, to]);
+  }, [from, to, systemFilter]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -439,6 +442,40 @@ export default function AnalyticsPage() {
                 className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#386E65] focus:border-transparent" />
             </div>
             {loading && <div className="w-4 h-4 border-2 border-[#386E65] border-t-transparent rounded-full animate-spin" />}
+          </div>
+
+          {/* System filter — affects every aggregate on the page */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">System</span>
+            {([
+              { key: "all", label: "Both", count: (data?.bySystem?.legacy ?? 0) + (data?.bySystem?.new ?? 0), tone: "default" as const },
+              { key: "legacy", label: "Old", count: data?.bySystem?.legacy ?? 0, tone: "legacy" as const },
+              { key: "new", label: "New", count: data?.bySystem?.new ?? 0, tone: "new" as const },
+            ]).map((chip) => {
+              const isActive = systemFilter === chip.key;
+              const toneCls = isActive
+                ? chip.tone === "legacy"
+                  ? "bg-[#386E65] text-white border-[#386E65]"
+                  : chip.tone === "new"
+                    ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-indigo-500"
+                    : "bg-gray-900 text-white border-gray-900"
+                : "bg-white text-gray-600 border-gray-200 hover:border-gray-300";
+              return (
+                <button
+                  key={chip.key}
+                  onClick={() => setSystemFilter(chip.key as "all" | "legacy" | "new")}
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium transition-all ${toneCls}`}
+                >
+                  {chip.tone === "new" && !isActive && (
+                    <svg className="w-2.5 h-2.5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  )}
+                  {chip.label}
+                  <span className={`tabular-nums ${isActive ? "opacity-90" : "text-gray-400"}`}>{chip.count}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
