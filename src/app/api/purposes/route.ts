@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { value } = await req.json();
-  const v = String(value ?? "").trim().toUpperCase();
+  const v = String(value ?? "").trim();
   if (!v) {
     return NextResponse.json({ error: "Value is required" }, { status: 400 });
   }

@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
     createdBy: (session.email as string) || null,
     system,
     employerName: system === "new" ? String(employerName).trim() : null,
-    purposeOfResidency: system === "new" ? String(purposeOfResidency).trim().toUpperCase() : null,
+    purposeOfResidency: system === "new" ? String(purposeOfResidency).trim() : null,
   }).returning();
 
   // Decrement credits

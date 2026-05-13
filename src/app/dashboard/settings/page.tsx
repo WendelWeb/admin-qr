@@ -464,9 +464,9 @@ export default function SettingsPage() {
               <input
                 type="text"
                 value={newPurpose}
-                onChange={(e) => setNewPurpose(e.target.value.toUpperCase())}
-                placeholder="E.G. STUDENT VISA"
-                className="flex-1 min-w-0 px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] text-sm font-mono uppercase tracking-wide transition-all"
+                onChange={(e) => setNewPurpose(e.target.value)}
+                placeholder="e.g. Student Visa"
+                className="flex-1 min-w-0 px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] text-sm transition-all"
               />
               <button
                 type="submit"
@@ -497,7 +497,7 @@ export default function SettingsPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="flex-1 min-w-0 truncate text-sm font-mono uppercase tracking-wide text-gray-800">
+                    <span className="flex-1 min-w-0 truncate text-sm text-gray-800">
                       {p.value}
                     </span>
                     <button

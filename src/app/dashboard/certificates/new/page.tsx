@@ -125,7 +125,7 @@ export default function NewCertificatePage() {
     const dateIssued = `${issued.getFullYear()}-${pad2(issued.getMonth() + 1)}-${pad2(issued.getDate())}`;
     const simEmployer = system === "new" ? "Acme Caribbean Holdings" : undefined;
     const simPurpose = system === "new"
-      ? (purposeOfResidency || purposes[0]?.value || "WORK PERMIT")
+      ? (purposeOfResidency || purposes[0]?.value || "Work Permit")
       : undefined;
 
     try {
