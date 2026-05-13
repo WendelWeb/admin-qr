@@ -24,6 +24,18 @@ export const certificates = pgTable("certificates", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   deletedAt: timestamp("deleted_at"),
   deletedBy: text("deleted_by"),
+  // System the cert was issued under: 'legacy' uses tpl_m9by23NrfhptCLjpLd,
+  // 'new' uses tpl_N5kEELcbHXQm6q7NnD and carries the two extra fields.
+  system: text("system").notNull().default("legacy"),
+  employerName: text("employer_name"),
+  purposeOfResidency: text("purpose_of_residency"),
+});
+
+// Admin-managed dropdown values for Purpose of Residency on the new system.
+export const purposeOptions = pgTable("purpose_options", {
+  id: serial("id").primaryKey(),
+  value: text("value").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const physicians = pgTable("physicians", {

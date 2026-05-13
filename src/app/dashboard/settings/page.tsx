@@ -36,6 +36,45 @@ export default function SettingsPage() {
   const [simSuccess, setSimSuccess] = useState("");
   const [billingExpired, setBillingExpired] = useState(false);
 
+  // Purposes of Residency (used by the New System certificate form)
+  const [purposes, setPurposes] = useState<{ id: number; value: string }[]>([]);
+  const [newPurpose, setNewPurpose] = useState("");
+  const [purposeError, setPurposeError] = useState("");
+  const [purposeAdding, setPurposeAdding] = useState(false);
+
+  function loadPurposes() {
+    fetch("/api/purposes")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setPurposes(data); });
+  }
+
+  async function handleAddPurpose(e: React.FormEvent) {
+    e.preventDefault();
+    setPurposeError("");
+    const v = newPurpose.trim();
+    if (!v) return;
+    setPurposeAdding(true);
+    const res = await fetch("/api/purposes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value: v }),
+    });
+    if (res.ok) {
+      setNewPurpose("");
+      loadPurposes();
+    } else {
+      const data = await res.json();
+      setPurposeError(data.error || "Failed to add");
+    }
+    setPurposeAdding(false);
+  }
+
+  async function handleDeletePurpose(id: number, value: string) {
+    if (!confirm(`Remove "${value}" from the Purpose of Residency list?`)) return;
+    await fetch(`/api/purposes/${id}`, { method: "DELETE" });
+    loadPurposes();
+  }
+
   useEffect(() => {
     // Get current user role
     fetch("/api/auth/me")
@@ -65,6 +104,9 @@ export default function SettingsPage() {
       .then((data) => {
         if (data.template) setTemplateName(data.template.name);
       });
+
+    // Get purpose-of-residency options
+    loadPurposes();
   }, []);
 
   async function handlePasswordSubmit(e: React.FormEvent) {
@@ -398,6 +440,77 @@ export default function SettingsPage() {
 
           {templateError && <p className="text-red-600 text-sm mt-2">{templateError}</p>}
           {templateSuccess && <p className="text-green-600 text-sm mt-2">{templateSuccess}</p>}
+        </div>
+
+        {/* Purposes of Residency — used by the New System certificate form */}
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="px-5 sm:px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Purposes of Residency</h2>
+              <p className="text-xs text-gray-500">Dropdown values offered when issuing a New System certificate.</p>
+            </div>
+            <span className="ml-auto text-xs font-mono px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+              {purposes.length}
+            </span>
+          </div>
+
+          <div className="p-5 sm:p-6">
+            <form onSubmit={handleAddPurpose} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newPurpose}
+                onChange={(e) => setNewPurpose(e.target.value.toUpperCase())}
+                placeholder="E.G. STUDENT VISA"
+                className="flex-1 min-w-0 px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#386E65]/40 focus:border-[#386E65] text-sm font-mono uppercase tracking-wide transition-all"
+              />
+              <button
+                type="submit"
+                disabled={purposeAdding || !newPurpose.trim()}
+                className="px-4 py-2.5 bg-[#386E65] text-white rounded-xl hover:bg-[#2d5a53] transition-colors text-sm font-medium disabled:opacity-50 shrink-0"
+              >
+                Add
+              </button>
+            </form>
+
+            {purposeError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-3">
+                <p className="text-red-700 text-sm">{purposeError}</p>
+              </div>
+            )}
+
+            {purposes.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-6">No purposes yet. Add one above.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {purposes.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-gray-50 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-100 to-indigo-50 ring-1 ring-indigo-100 flex items-center justify-center shrink-0">
+                      <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span className="flex-1 min-w-0 truncate text-sm font-mono uppercase tracking-wide text-gray-800">
+                      {p.value}
+                    </span>
+                    <button
+                      onClick={() => handleDeletePurpose(p.id, p.value)}
+                      className="text-xs text-red-600 hover:text-red-800 font-medium shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      Delete
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* Maintenance Mode - Super Admin Only */}

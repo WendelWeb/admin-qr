@@ -6,7 +6,8 @@ import { eq, and, isNull } from "drizzle-orm";
 
 const DOCSPRING_TOKEN_ID = "api_Jx72Zxtk6dMyYZ739H";
 const DOCSPRING_TOKEN_SECRET = "9tKdzcmS4qctmatMD2AT3MmHTr59X4qNNxXGQbmxeb";
-const DOCSPRING_TEMPLATE_ID = "tpl_m9by23NrfhptCLjpLd";
+const DOCSPRING_TEMPLATE_ID_LEGACY = "tpl_m9by23NrfhptCLjpLd";
+const DOCSPRING_TEMPLATE_ID_NEW = "tpl_N5kEELcbHXQm6q7NnD";
 
 const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const monthsFull = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -52,15 +53,35 @@ export async function GET(
     qrBase64 = cert.qrCode.split(",")[1] || "";
   }
 
-  // Build data matching DocSpring template field names
-  const submissionData: Record<string, unknown> = {
-    "FULL NAME": cert.name,
-    "CERTIFICATE NUMBER": cert.certificateNumber,
-    "ACESS CODE": cert.accessCode,
-    "DATE OF BIRTH": formatDateShort(cert.dateOfBirth),
-    "DATE ISSUED": formatDateFull(cert.dateIssued),
-    "EXPIRY DATE": formatDateFull(cert.expiryDate),
-  };
+  const isNewSystem = cert.system === "new";
+  const templateId = isNewSystem ? DOCSPRING_TEMPLATE_ID_NEW : DOCSPRING_TEMPLATE_ID_LEGACY;
+
+  // Build data matching DocSpring template field names. The two templates
+  // use different (and partially typo'd) keys, so we map each explicitly.
+  const submissionData: Record<string, unknown> = isNewSystem
+    ? {
+        "NAME": cert.name,
+        // The new template still has a typo on this label ("CERTFICATE"),
+        // so we must send under that exact key.
+        "CERTFICATE NUMBER": String(cert.certificateNumber),
+        "ACCESS CODE": cert.accessCode,
+        "DATE OF BIRTH": formatDateShort(cert.dateOfBirth),
+        "DATE ISSUED": formatDateFull(cert.dateIssued),
+        "EXPIRY DATE": formatDateFull(cert.expiryDate),
+        "EMPLOYER NAME": cert.employerName || "",
+        "PURPOSE OF RESIDENCY": cert.purposeOfResidency || "",
+        // Unnamed checkbox in the template — left unchecked until we know
+        // what it represents.
+        "field7": false,
+      }
+    : {
+        "FULL NAME": cert.name,
+        "CERTIFICATE NUMBER": cert.certificateNumber,
+        "ACESS CODE": cert.accessCode,
+        "DATE OF BIRTH": formatDateShort(cert.dateOfBirth),
+        "DATE ISSUED": formatDateFull(cert.dateIssued),
+        "EXPIRY DATE": formatDateFull(cert.expiryDate),
+      };
 
   if (qrBase64) {
     submissionData["QRCODE"] = { base64: qrBase64 };
@@ -70,7 +91,7 @@ export async function GET(
   const auth = Buffer.from(`${DOCSPRING_TOKEN_ID}:${DOCSPRING_TOKEN_SECRET}`).toString("base64");
 
   const docspringRes = await fetch(
-    `https://sync.api.docspring.com/api/v1/templates/${DOCSPRING_TEMPLATE_ID}/submissions`,
+    `https://sync.api.docspring.com/api/v1/templates/${templateId}/submissions`,
     {
       method: "POST",
       headers: {
@@ -86,8 +107,14 @@ export async function GET(
 
   if (!docspringRes.ok) {
     const errorData = await docspringRes.json();
-    console.error("DocSpring error:", errorData);
-    return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
+    console.error("DocSpring error:", JSON.stringify(errorData));
+    return NextResponse.json(
+      {
+        error: "Failed to generate PDF",
+        details: errorData?.errors || errorData?.submission?.json_schema_errors || errorData,
+      },
+      { status: 500 }
+    );
   }
 
   const result = await docspringRes.json();

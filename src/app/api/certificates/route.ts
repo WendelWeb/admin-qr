@@ -71,7 +71,28 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { name, dateOfBirth, dateIssued, validityYears, country, examiningPhysician, medicalOfficer } = body;
+  const {
+    name,
+    dateOfBirth,
+    dateIssued,
+    validityYears,
+    country,
+    examiningPhysician,
+    medicalOfficer,
+    system: rawSystem,
+    employerName,
+    purposeOfResidency,
+  } = body;
+
+  const system = rawSystem === "new" ? "new" : "legacy";
+  if (system === "new") {
+    if (!employerName || !String(employerName).trim()) {
+      return NextResponse.json({ error: "Employer name is required for the new system" }, { status: 400 });
+    }
+    if (!purposeOfResidency || !String(purposeOfResidency).trim()) {
+      return NextResponse.json({ error: "Purpose of residency is required for the new system" }, { status: 400 });
+    }
+  }
 
   if (!dateIssued) {
     return NextResponse.json({ error: "Date issued is required" }, { status: 400 });
@@ -117,6 +138,9 @@ export async function POST(req: NextRequest) {
     medicalOfficer,
     qrCode: qrCodeDataUrl,
     createdBy: (session.email as string) || null,
+    system,
+    employerName: system === "new" ? String(employerName).trim() : null,
+    purposeOfResidency: system === "new" ? String(purposeOfResidency).trim().toUpperCase() : null,
   }).returning();
 
   // Decrement credits
