@@ -296,15 +296,55 @@ export default function DashboardPage() {
           </div>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 ring-1 ring-gray-200 flex items-center justify-center mb-3">
-            <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <p className="text-sm font-semibold text-gray-700">No certificates found</p>
-          <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filter.</p>
-        </div>
+        (() => {
+          // Diagnose which filter is hiding things.
+          const matchingSystem = systemFilter === "all"
+            ? certificates
+            : certificates.filter((c) => (c.system === "new" ? "new" : "legacy") === systemFilter);
+          const matchingStatus = certificates.filter((c) => {
+            if (filter === "all") return true;
+            if (filter === "expired") return c.expiryDate < today;
+            if (filter === "expiring") return c.expiryDate >= today && c.expiryDate <= in30Days;
+            if (filter === "active") return c.expiryDate >= today;
+            return true;
+          });
+          const onlySystemFilter = systemFilter !== "all" && matchingSystem.length > 0 && filter !== "all";
+          const onlyStatusFilter = systemFilter !== "all" && filter !== "all" && matchingStatus.length > 0 && matchingSystem.length === 0;
+
+          return (
+            <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 ring-1 ring-gray-200 flex items-center justify-center mb-3">
+                <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-gray-700">No certificates match these filters</p>
+              <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                {onlySystemFilter && (
+                  <>There are <strong>{matchingSystem.length}</strong> certificates in the {systemFilter === "new" ? "New" : "Old"} system, but none are <strong>{filter}</strong>.</>
+                )}
+                {onlyStatusFilter && (
+                  <>There are <strong>{matchingStatus.length}</strong> {filter} certificates, but none are in the {systemFilter === "new" ? "New" : "Old"} system.</>
+                )}
+                {!onlySystemFilter && !onlyStatusFilter && (
+                  <>Try adjusting your search or filter.</>
+                )}
+              </p>
+              {(systemFilter !== "all" || filter !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => { setSystemFilter("all"); setFilter("all"); }}
+                  className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#386E65] hover:bg-[#386E65]/10 rounded-lg transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Reset all filters
+                </button>
+              )}
+            </div>
+          );
+        })()
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4">
           {filtered.map((cert) => {
